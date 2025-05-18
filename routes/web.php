@@ -74,6 +74,10 @@ Route::group(['middleware' => 'admin'], function () {
   //Admin view all schedule 
   Route::get('admin/schedule/all', [ScheduleController::class, 'allSchedules'])->name('admin.schedule.all');
 
+  //view all reservations
+  Route::get('admin/reservations', [ReservationController::class, 'adminIndex'])->name('admin.reservations');
+  Route::post('admin/reservations/{id}/cancel', [ReservationController::class, 'cancel'])->name('admin.reservations.cancel');
+
   Route::get('admin/account', [UserController::class, 'MyAccount']);
   Route::post('admin/account', [UserController::class, 'UpdateMyAccount']);
 });

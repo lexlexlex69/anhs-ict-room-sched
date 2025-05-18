@@ -158,6 +158,12 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ url('admin/reservations') }}" class="flex items-center p-3 rounded-lg 
+                            {{ Request::is('admin/reservations') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">
+                        <i class="fa-solid fa-calendar text-lg mr-3 "></i> Reservations
+                    </a>
+                </li>
+                <li>
                     <a href="{{ url('admin/room/list') }}" class="flex items-center p-3 rounded-lg 
                             {{ Request::is('admin/room/list') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">
                         <i class="fa-solid fa-door-open text-lg mr-3"></i> Rooms

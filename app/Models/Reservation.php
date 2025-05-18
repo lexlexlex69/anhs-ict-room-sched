@@ -19,7 +19,8 @@ class Reservation extends Model
         'end_time',
         'teacher_name',
         'subject',
-        'status'
+        'status',
+        'remarks',
     ];
 
     public function room()
@@ -30,5 +31,10 @@ class Reservation extends Model
     public static function generateReferenceNumber()
     {
         return 'RES-' . strtoupper(Str::random(8));
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', '!=', 'cancelled');
     }
 }

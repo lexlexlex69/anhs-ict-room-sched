@@ -161,4 +161,32 @@ class ReservationController extends Controller
             'requested_duration' => $duration
         ]);
     }
+
+    public function adminIndex()
+    {
+        $reservations = Reservation::with('room')
+            ->orderBy('date', 'desc')
+            ->orderBy('start_time')
+            ->get()
+            ->groupBy(function ($item) {
+                return Carbon::parse($item->date)->format('Y-m-d');
+            });
+
+        return view('admin.reservations.index', compact('reservations'));
+    }
+
+    public function cancel(Request $request, $id)
+    {
+        $request->validate([
+            'remarks' => 'required|string|max:255'
+        ]);
+
+        $reservation = Reservation::findOrFail($id);
+        $reservation->update([
+            'status' => 'cancelled',
+            'remarks' => $request->remarks
+        ]);
+
+        return redirect()->back()->with('success', 'Reservation cancelled successfully');
+    }
 }
