@@ -345,12 +345,11 @@ class ScheduleController extends Controller
         $conflict = WeeklySchedule::where('room_id', $request->room_id)
             ->where('day', $request->day)
             ->where(function ($query) use ($request) {
-                $query->whereBetween('start_time', [$request->start_time, $request->end_time])
-                    ->orWhereBetween('end_time', [$request->start_time, $request->end_time])
-                    ->orWhere(function ($q) use ($request) {
-                        $q->where('start_time', '<', $request->start_time)
-                            ->where('end_time', '>', $request->end_time);
-                    });
+                $query->where(function ($q) use ($request) {
+                    // New schedule starts during existing schedule
+                    $q->where('start_time', '<', $request->end_time)
+                        ->where('end_time', '>', $request->start_time);
+                });
             })->exists();
 
         if ($conflict) {

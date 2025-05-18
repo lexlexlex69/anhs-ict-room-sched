@@ -134,13 +134,26 @@
         const startTime = document.querySelector("select[name='start_time']");
         const endTime = document.querySelector("select[name='end_time']");
 
+        // startTime.addEventListener("change", function() {
+        //     const startHour = parseInt(this.value.split(':')[0]);
+        //     Array.from(endTime.options).forEach(option => {
+        //         const endHour = parseInt(option.value.split(':')[0]);
+        //         option.disabled = endHour <= startHour;
+        //     });
+        //     endTime.value = startHour + 1 + ":00:00";
+        // });
         startTime.addEventListener("change", function() {
             const startHour = parseInt(this.value.split(':')[0]);
             Array.from(endTime.options).forEach(option => {
                 const endHour = parseInt(option.value.split(':')[0]);
                 option.disabled = endHour <= startHour;
+                // Ensure at least 1 hour difference
+                option.disabled = endHour <= startHour;
             });
-            endTime.value = startHour + 1 + ":00:00";
+            // Auto-select next hour if current selection is invalid
+            if (parseInt(endTime.value.split(':')[0]) <= startHour) {
+                endTime.value = (startHour + 1) + ":00:00";
+            }
         });
     });
 </script>

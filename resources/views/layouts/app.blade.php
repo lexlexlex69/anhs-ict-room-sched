@@ -12,6 +12,22 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
         .group:hover .group-hover\:opacity-100 {
             opacity: 1;
         }

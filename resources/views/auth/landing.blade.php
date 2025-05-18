@@ -195,6 +195,10 @@
 
                 const formData = new FormData(this);
 
+                // Clear any previous error messages
+                const existingError = document.querySelector('#step1 .error-message');
+                if (existingError) existingError.remove();
+
                 fetch('{{ route("reservation.check") }}', {
                         method: 'POST',
                         body: formData,
@@ -227,16 +231,29 @@
                             });
 
                             document.getElementById('availabilityMessage').innerHTML = `
-                    <strong>${data.room.room_name}</strong> is available on<br>
-                    ${day}, ${formData.get('date')} from ${startTime} to ${endTime}
-                `;
+                <strong>${data.room.room_name}</strong> is available on<br>
+                ${day}, ${formData.get('date')} from ${startTime} to ${endTime}
+            `;
 
                             // Show step 2
                             document.getElementById('step1').classList.add('hidden');
                             document.getElementById('step2').classList.remove('hidden');
                         } else {
-                            alert('Room is not available at the selected time. Please choose another time or room.');
+                            // Create error message element
+                            const errorDiv = document.createElement('div');
+                            errorDiv.className = 'bg-red-100 border border-red-200 text-red-700 p-3 rounded mb-4 error-message';
+                            errorDiv.innerHTML = data.message || 'Room is not available at the selected time. Please choose another time or room.';
+
+                            // Insert error message after the form header
+                            const form = document.getElementById('checkAvailabilityForm');
+                            form.insertBefore(errorDiv, form.firstChild);
+
+                            // Add animation to highlight the error
+                            errorDiv.style.animation = 'fadeIn 0.3s ease-in-out';
                         }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
                     });
             });
 
@@ -263,6 +280,21 @@
                         }
                     });
             });
+        });
+        startTime.addEventListener("change", function() {
+            const startHour = parseInt(this.value.split(':')[0]);
+            const endSelect = document.querySelector("select[name='end_time']");
+
+            Array.from(endSelect.options).forEach(option => {
+                const endHour = parseInt(option.value.split(':')[0]);
+                // Disable times that are before or equal to start time
+                option.disabled = endHour <= startHour;
+            });
+
+            // Auto-select the next hour if current selection is invalid
+            if (parseInt(endSelect.value.split(':')[0]) <= startHour) {
+                endSelect.value = (startHour + 1) + ":00:00";
+            }
         });
     </script>
 

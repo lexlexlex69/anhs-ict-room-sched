@@ -27,12 +27,10 @@ class ReservationController extends Controller
         $weeklyConflict = WeeklySchedule::where('room_id', $request->room_id)
             ->where('day', $dayOfWeek)
             ->where(function ($query) use ($request) {
-                $query->whereBetween('start_time', [$request->start_time, $request->end_time])
-                    ->orWhereBetween('end_time', [$request->start_time, $request->end_time])
-                    ->orWhere(function ($q) use ($request) {
-                        $q->where('start_time', '<=', $request->start_time)
-                            ->where('end_time', '>=', $request->end_time);
-                    });
+                $query->where(function ($q) use ($request) {
+                    $q->where('start_time', '<', $request->end_time)
+                        ->where('end_time', '>', $request->start_time);
+                });
             })->exists();
 
         // Check reservations
@@ -40,22 +38,20 @@ class ReservationController extends Controller
             ->where('date', $request->date)
             ->where('status', '!=', 'rejected')
             ->where(function ($query) use ($request) {
-                $query->whereBetween('start_time', [$request->start_time, $request->end_time])
-                    ->orWhereBetween('end_time', [$request->start_time, $request->end_time])
-                    ->orWhere(function ($q) use ($request) {
-                        $q->where('start_time', '<=', $request->start_time)
-                            ->where('end_time', '>=', $request->end_time);
-                    });
+                $query->where(function ($q) use ($request) {
+                    $q->where('start_time', '<', $request->end_time)
+                        ->where('end_time', '>', $request->start_time);
+                });
             })->exists();
 
         $available = !$weeklyConflict && !$reservationConflict;
 
         return response()->json([
             'available' => $available,
-            'room' => $available ? Room::find($request->room_id) : null
+            'room' => Room::find($request->room_id),
+            'message' => $available ? '' : 'The room is not available at the selected time due to a scheduling conflict.'
         ]);
     }
-
     public function store(Request $request)
     {
         $request->validate([
