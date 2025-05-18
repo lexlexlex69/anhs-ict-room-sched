@@ -79,4 +79,86 @@ class ReservationController extends Controller
             'reference_number' => $reservation->reference_number
         ]);
     }
+    // Add this method to your ReservationController
+    public function suggestOptimalSlots(Request $request)
+    {
+        $request->validate([
+            'room_id' => 'required|exists:rooms,id',
+            'date' => 'required|date|after_or_equal:today',
+            'duration' => 'required|integer|min:1' // duration in hours
+        ]);
+
+        $date = Carbon::parse($request->date);
+        $dayOfWeek = strtolower($date->englishDayOfWeek);
+        $roomId = $request->room_id;
+        $duration = $request->duration;
+
+        // Get all existing schedules for this room/day
+        $weeklySchedules = WeeklySchedule::where('room_id', $roomId)
+            ->where('day', $dayOfWeek)
+            ->orderBy('start_time')
+            ->get();
+
+        // Get all reservations for this room/date
+        $reservations = Reservation::where('room_id', $roomId)
+            ->where('date', $request->date)
+            ->where('status', '!=', 'rejected')
+            ->orderBy('start_time')
+            ->get();
+
+        // Combine and sort all time slots
+        $busySlots = collect()
+            ->merge($weeklySchedules->map(fn($s) => [
+                'start' => $s->start_time,
+                'end' => $s->end_time
+            ]))
+            ->merge($reservations->map(fn($r) => [
+                'start' => $r->start_time,
+                'end' => $r->end_time
+            ]))
+            ->sortBy('start');
+
+        // Greedy algorithm to find available slots
+        $availableSlots = [];
+        $previousEnd = '07:00:00'; // Assuming earliest possible time
+
+        foreach ($busySlots as $slot) {
+            $slotStart = $slot['start'];
+            $slotEnd = $slot['end'];
+
+            // Calculate time between previous end and current start
+            $availableStart = Carbon::parse($previousEnd);
+            $availableEnd = Carbon::parse($slotStart);
+            $availableDuration = $availableStart->diffInHours($availableEnd);
+
+            if ($availableDuration >= $duration) {
+                $availableSlots[] = [
+                    'start' => $previousEnd,
+                    'end' => $slotStart,
+                    'duration' => $availableDuration
+                ];
+            }
+
+            // Update previous end time
+            $previousEnd = max($previousEnd, $slotEnd);
+        }
+
+        // Check after last busy slot until end of day (18:00)
+        $lastPossible = Carbon::parse('18:00:00');
+        $lastEnd = Carbon::parse($previousEnd);
+        $finalDuration = $lastEnd->diffInHours($lastPossible);
+
+        if ($finalDuration >= $duration) {
+            $availableSlots[] = [
+                'start' => $previousEnd,
+                'end' => '18:00:00',
+                'duration' => $finalDuration
+            ];
+        }
+
+        return response()->json([
+            'available_slots' => $availableSlots,
+            'requested_duration' => $duration
+        ]);
+    }
 }

@@ -163,6 +163,76 @@
         updateTime();
     </script>
     <script>
+        function suggestOptimalSlots(roomId, date, duration) {
+            fetch('{{ route("reservation.suggest-slots") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        room_id: roomId,
+                        date: date,
+                        duration: duration
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.available_slots.length > 0) {
+                        const suggestionsDiv = document.createElement('div');
+                        suggestionsDiv.className = 'bg-blue-50 border border-blue-200 p-3 rounded mb-4';
+
+                        let suggestionsHTML = '<p class="font-semibold text-blue-800">Suggested available time slots:</p><ul class="mt-2 space-y-2">';
+
+                        data.available_slots.forEach(slot => {
+                            const startTime = new Date('2000-01-01T' + slot.start).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                            const endTime = new Date('2000-01-01T' + slot.end).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+
+                            suggestionsHTML += `
+                    <li class="flex justify-between items-center">
+                        <span>${startTime} - ${endTime}</span>
+                        <button onclick="useSuggestedSlot('${slot.start}', '${slot.end}')" 
+                            class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            Use this slot
+                        </button>
+                    </li>
+                `;
+                        });
+
+                        suggestionsHTML += '</ul>';
+                        suggestionsDiv.innerHTML = suggestionsHTML;
+
+                        // Insert suggestions after error message
+                        const errorDiv = document.querySelector('#step1 .error-message');
+                        if (errorDiv) {
+                            errorDiv.insertAdjacentElement('afterend', suggestionsDiv);
+                        } else {
+                            const form = document.getElementById('checkAvailabilityForm');
+                            form.insertBefore(suggestionsDiv, form.firstChild);
+                        }
+                    }
+                });
+        }
+
+        // Add this function to use suggested slots
+        function useSuggestedSlot(startTime, endTime) {
+            document.querySelector('select[name="start_time"]').value = startTime;
+            document.querySelector('select[name="end_time"]').value = endTime;
+
+            // Remove suggestions
+            const suggestionsDiv = document.querySelector('.bg-blue-50');
+            if (suggestionsDiv) suggestionsDiv.remove();
+
+            // Re-check availability
+            document.getElementById('checkAvailabilityForm').dispatchEvent(new Event('submit'));
+        }
         document.addEventListener('DOMContentLoaded', function() {
             const modal = document.getElementById('reservationModal');
             const openBtn = document.getElementById('openReservationModal');
@@ -194,6 +264,8 @@
                 e.preventDefault();
 
                 const formData = new FormData(this);
+                const duration = parseInt(formData.get('end_time').split(':')[0]) -
+                    parseInt(formData.get('start_time').split(':')[0]);
 
                 // Clear any previous error messages
                 const existingError = document.querySelector('#step1 .error-message');
@@ -250,6 +322,11 @@
 
                             // Add animation to highlight the error
                             errorDiv.style.animation = 'fadeIn 0.3s ease-in-out';
+                            suggestOptimalSlots(
+                                formData.get('room_id'),
+                                formData.get('date'),
+                                duration
+                            );
                         }
                     })
                     .catch(error => {

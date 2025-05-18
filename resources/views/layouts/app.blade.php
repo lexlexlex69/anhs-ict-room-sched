@@ -12,6 +12,19 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <style>
+        /* Add to your existing styles */
+        .slot-suggestion {
+            transition: all 0.2s ease;
+        }
+
+        .slot-suggestion:hover {
+            background-color: #f0f7ff;
+        }
+
+        .use-slot-btn {
+            transition: color 0.2s ease;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -157,6 +170,12 @@
                         <i class="fa-solid fa-chalkboard-teacher text-lg mr-3"></i> Teachers
                     </a>
                 </li>
+                <li>
+                    <a href="{{ url('admin/schedule/all') }}" class="flex items-center p-3 rounded-lg 
+                    {{ Request::is('admin/schedule/all') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">
+                        <i class="fa-solid fa-chalkboard-teacher text-lg mr-3"></i> Weekly Schedules
+                    </a>
+                </li>
 
                 <li>
                     <a href="{{ url('admin/account') }}" class="flex items-center p-3 rounded-lg 
@@ -172,9 +191,9 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{{ url('teacher/schedule/list') }}" class="flex items-center p-3 rounded-lg 
-                            {{ Request::is('teacher/schedule/list') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">
-                        <i class="fa-solid fa-calendar-alt text-lg mr-3"></i> Schedule
+                    <a href="{{ url('teacher/schedule/weekly') }}" class="flex items-center p-3 rounded-lg 
+                            {{ Request::is('teacher/schedule/weekly') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">
+                        <i class="fa-solid fa-calendar-alt text-lg mr-3"></i> Weekly Schedule
                     </a>
                 </li>
                 <li>
