@@ -60,7 +60,7 @@
         <div class="w-full max-w-lg p-6 bg-white border-2 border-blue-600 rounded-lg shadow-lg">
             <div class="flex justify-between items-center border-b border-blue-300 pb-2 mb-4">
                 <h2 class="text-xl font-bold text-blue-700">ADD WEEKLY SCHEDULE</h2>
-                <button id="closeModalBtn" class="text-blue-700 hover:text-red-500 text-lg">&times;</button>
+                <button id="closeModalBtn" class="text-blue-700 hover:text-red-500  text-3xl">&times;</button>
             </div>
 
             <form action="{{ route('teacher.schedule.weekly.store') }}" method="POST">
@@ -88,7 +88,7 @@
                         </select>
                     </div>
 
-                    <div class="flex flex-col">
+                    <!-- <div class="flex flex-col">
                         <label class="text-sm font-bold text-gray-700">Time</label>
                         <div class="flex space-x-2">
                             <select name="start_time" class="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700" required>
@@ -102,7 +102,30 @@
                                 @endforeach
                             </select>
                         </div>
+                    </div> -->
+                    <div class="flex flex-col">
+                        <label class="text-sm font-bold text-gray-700">Time</label>
+                        <div class="flex space-x-2">
+                            {{-- Start Time --}}
+                            <select name="start_time" class="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700" required>
+                                @foreach(range(7, 16) as $hour)
+                                @if($hour !== 12)
+                                <option value="{{ sprintf('%02d:00:00', $hour) }}">{{ date('g A', strtotime("$hour:00")) }}</option>
+                                @endif
+                                @endforeach
+                            </select>
+
+                            {{-- End Time --}}
+                            <select name="end_time" class="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700" required>
+                                @foreach(range(8, 17) as $hour)
+                                @if($hour !== 13)
+                                <option value="{{ sprintf('%02d:00:00', $hour) }}">{{ date('g A', strtotime("$hour:00")) }}</option>
+                                @endif
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
+
                 </div>
 
                 <div class="flex justify-end space-x-4 mt-6">

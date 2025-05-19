@@ -46,6 +46,8 @@
             <span class="font-medium">Admin</span>
             <i class="fa-solid fa-right-to-bracket"></i>
         </a>
+        <h3 class="text-md font-semibold text-gray-700 uppercase mb-3 mt-6">Room reservation</h3>
+
         <button id="openReservationModal" class="w-full flex items-center justify-between px-6 py-3 text-white bg-green-500 rounded-lg hover:bg-green-700 transition mt-4">
             <span class="font-medium">Reserve a Room</span>
             <i class="fa-solid fa-calendar-plus"></i>
@@ -87,10 +89,11 @@
         </div>
     </div>
     <div id="reservationModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-        <div class="w-full max-w-lg p-6 bg-white rounded-lg shadow-lg">
+        <div class="w-full max-w-lg p-6 bg-white border-2 border-blue-600 rounded-lg shadow-lg">
             <div class="flex justify-between items-center border-b pb-2 mb-4">
-                <h2 class="text-xl font-bold">Room Reservation</h2>
-                <button id="closeReservationModal" class="text-gray-500 hover:text-gray-700">&times;</button>
+                <h2 class="text-xl font-bold text-blue-700">Room Reservation</h2>
+
+                <button id="closeReservationModal" class="text-gray-500 hover:text-gray-700 text-3xl">&times;</button>
             </div>
 
             <!-- Step 1: Check Availability -->
@@ -99,7 +102,7 @@
                     @csrf
                     <div class="space-y-4">
                         <div class="flex flex-col">
-                            <label class="text-sm font-bold">Room</label>
+                            <label class="text-sm font-bold text-gray-700">Room</label>
                             <select name="room_id" class="p-2 border rounded-md" required>
                                 <option value="">Select Room</option>
                                 @foreach(App\Models\Room::all() as $room)
@@ -109,12 +112,12 @@
                         </div>
 
                         <div class="flex flex-col">
-                            <label class="text-sm font-bold">Date</label>
+                            <label class="text-sm font-bold text-gray-700">Date</label>
                             <input type="date" name="date" min="{{ date('Y-m-d') }}" class="p-2 border rounded-md" required>
                         </div>
 
                         <div class="flex flex-col">
-                            <label class="text-sm font-bold">Time</label>
+                            <label class="text-sm font-bold text-gray-700">Time</label>
                             <div class="flex space-x-2">
                                 <select name="start_time" class="w-full p-2 border rounded-md" required>
                                     @for($hour = 7; $hour <= 17; $hour++)
