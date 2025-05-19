@@ -20,6 +20,56 @@
 
         <div class="bg-white bg-opacity-30 backdrop-blur-lg p-6 rounded-lg shadow-lg">
             <h1 class="text-lg font-karla font-semibold text-gray-900 mb-5">Today's Schedule</h1>
+            <!-- Status Count Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 my-6">
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Classes</p>
+                            <p class="text-2xl font-bold">{{ $statusCounts['total'] }}</p>
+                        </div>
+                        <div class="bg-gray-100 p-3 rounded-full">
+                            <i class="fas fa-calendar text-gray-500"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Upcoming</p>
+                            <p class="text-2xl font-bold text-yellow-600">{{ $statusCounts['pending'] }}</p>
+                        </div>
+                        <div class="bg-yellow-100 p-3 rounded-full">
+                            <i class="fas fa-clock text-yellow-500"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Ongoing</p>
+                            <p class="text-2xl font-bold text-blue-600">{{ $statusCounts['ongoing'] }}</p>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-full">
+                            <i class="fas fa-chalkboard-teacher text-blue-500"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Completed</p>
+                            <p class="text-2xl font-bold text-green-600">{{ $statusCounts['completed'] }}</p>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-full">
+                            <i class="fas fa-check-circle text-green-500"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
             @if($schedules->isEmpty())
             <div class="text-center py-8">
                 <i class="fas fa-calendar-check text-4xl text-gray-400 mb-4"></i>

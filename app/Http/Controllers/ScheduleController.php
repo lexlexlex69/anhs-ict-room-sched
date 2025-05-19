@@ -445,35 +445,42 @@ class ScheduleController extends Controller
     {
         $user = Auth::user();
         $today = now()->format('Y-m-d');
+        $now = now();
 
         // Get today's fixed weekly schedules
-        $dayOfWeek = strtolower(now()->englishDayOfWeek);
+        $dayOfWeek = strtolower($now->englishDayOfWeek);
         $weeklySchedules = WeeklySchedule::with('room')
             ->where('teacher_id', $user->id)
             ->where('day', $dayOfWeek)
             ->orderBy('start_time')
-            ->get()
-            ->map(function ($schedule) {
-                return $this->addScheduleStatus($schedule, now());
-            });
+            ->get();
 
         // Get today's one-time schedules
         $oneTimeSchedules = Schedule::with('room')
             ->where('teacher_id', $user->id)
             ->where('date', $today)
             ->orderBy('start_time')
-            ->get()
-            ->map(function ($schedule) {
-                return $this->addScheduleStatus($schedule, now());
-            });
+            ->get();
 
-        // Combine and sort all schedules
+        // Combine and process all schedules
         $allSchedules = $weeklySchedules->merge($oneTimeSchedules)
+            ->map(function ($schedule) use ($now) {
+                return $this->addScheduleStatus($schedule, $now);
+            })
             ->sortBy('start_time');
+
+        // Count schedules by status
+        $statusCounts = [
+            'pending' => $allSchedules->where('status', 'pending')->count(),
+            'ongoing' => $allSchedules->where('status', 'ongoing')->count(),
+            'completed' => $allSchedules->where('status', 'completed')->count(),
+            'total' => $allSchedules->count()
+        ];
 
         return view('teacher.schedule.today', [
             'schedules' => $allSchedules,
-            'currentTime' => now()->format('h:i A')
+            'currentTime' => $now->format('h:i A'),
+            'statusCounts' => $statusCounts
         ]);
     }
 
