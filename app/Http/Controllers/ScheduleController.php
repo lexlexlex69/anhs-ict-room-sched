@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Schedule;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Notification;
+use App\Models\Reservation;
 use Illuminate\Support\Carbon;
 use App\Models\User;
 use App\Models\WeeklySchedule;
@@ -151,25 +152,27 @@ class ScheduleController extends Controller
     //admin
 
 
-    public function adminschedulelist()
+    public function adminschedulelist(Request $request)
     {
-        $getRoom = Room::all(); // Fetch all rooms
-        $schedules = Schedule::with(['room', 'teacher']) // Load room and teacher details
-            ->whereIn('status', ['upcoming', 'completed', 'ongoing'])
+        $getRoom = Room::all();
+
+        // Get current month and year or use requested values
+        $currentMonth = $request->input('month', date('m'));
+        $currentYear = $request->input('year', date('Y'));
+
+        // Get all reservations for the selected month
+        $reservations = Reservation::with(['room'])
+            ->active() // Only show non-cancelled reservations
+            ->whereYear('date', $currentYear)
+            ->whereMonth('date', $currentMonth)
+            ->orderBy('date')
+            ->orderBy('start_time')
             ->get()
-            ->map(function ($schedule) {
-                return [
-                    'teacher_name' => optional($schedule->teacher)->first_name, // Get teacher name
-                    'subject' => optional($schedule->teacher)->subject,
-                    'date' => $schedule->date,
-                    'start_time' => $schedule->start_time,
-                    'end_time' => $schedule->end_time,
-                    'status' => $schedule->status,
-                    'room_name' => optional($schedule->room)->room_name, // Get room name safely
-                ];
+            ->groupBy(function ($item) {
+                return \Carbon\Carbon::parse($item->date)->format('Y-m-d');
             });
 
-        return view('admin.schedule.list', compact('getRoom', 'schedules'));
+        return view('admin.schedule.list', compact('getRoom', 'reservations', 'currentMonth', 'currentYear'));
     }
 
 

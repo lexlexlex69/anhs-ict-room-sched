@@ -23,6 +23,7 @@ Route::post('/reservation/store', [ReservationController::class, 'store'])->name
 Route::post('/reservation/suggest-slots', [ReservationController::class, 'suggestOptimalSlots'])
   ->name('reservation.suggest-slots');
 
+
 //notification 
 
 Route::get('/get-notifications', [ScheduleController::class, 'getNotifications']);
