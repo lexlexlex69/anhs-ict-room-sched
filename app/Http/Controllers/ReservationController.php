@@ -189,4 +189,48 @@ class ReservationController extends Controller
 
         return redirect()->back()->with('success', 'Reservation cancelled successfully');
     }
+
+    public function checkTicketStatus(Request $request)
+    {
+        $request->validate([
+            'reference_number' => 'required|string'
+        ]);
+
+        $reservation = Reservation::with('room')->where('reference_number', $request->reference_number)->first();
+
+
+        if (!$reservation) {
+            return response()->json([
+                'status' => 'not_found',
+                'message' => 'No reservation found with that reference number.'
+            ]);
+        }
+
+        $now = now();
+        $start = Carbon::parse($reservation->date . ' ' . $reservation->start_time);
+        $end = Carbon::parse($reservation->date . ' ' . $reservation->end_time);
+
+        $status = $reservation->status;
+        $detailed_status = $status;
+
+        if ($status === 'approved') {
+            if ($now < $start) {
+                $detailed_status = 'pending';
+            } elseif ($now >= $start && $now <= $end) {
+                $detailed_status = 'ongoing';
+            } elseif ($now > $end) {
+                $detailed_status = 'completed';
+            }
+        } else {
+            $detailed_status = 'cancelled';
+        }
+
+        return response()->json([
+            'status' => 'found',
+            'reservation' => $reservation,
+            'room_name' => $reservation->room->room_name ?? null,
+            'detailed_status' => $detailed_status,
+            'current_time' => $now->format('Y-m-d H:i:s')
+        ]);
+    }
 }

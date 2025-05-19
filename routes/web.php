@@ -22,6 +22,8 @@ Route::post('/reservation/check', [ReservationController::class, 'checkAvailabil
 Route::post('/reservation/store', [ReservationController::class, 'store'])->name('reservation.store');
 Route::post('/reservation/suggest-slots', [ReservationController::class, 'suggestOptimalSlots'])
   ->name('reservation.suggest-slots');
+Route::post('/reservation/check-status', [ReservationController::class, 'checkTicketStatus'])
+  ->name('reservation.check-status');
 
 
 //notification 

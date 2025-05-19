@@ -50,6 +50,41 @@
             <span class="font-medium">Reserve a Room</span>
             <i class="fa-solid fa-calendar-plus"></i>
         </button>
+        <button id="openStatusModal" class="w-full flex items-center justify-between px-6 py-3 text-white bg-purple-500 rounded-lg hover:bg-purple-700 transition mt-4">
+            <span class="font-medium">Check Ticket Status</span>
+            <i class="fa-solid fa-ticket"></i>
+        </button>
+    </div>
+    <div id="statusModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div class="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
+            <div class="flex justify-between items-center border-b pb-2 mb-4">
+                <h2 class="text-xl font-bold">Check Ticket Status</h2>
+                <button id="closeStatusModal" class="text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+
+            <form id="checkStatusForm">
+                @csrf
+                <div class="flex flex-col">
+                    <label class="text-sm font-bold mb-2">Reference Number</label>
+                    <input type="text" name="reference_number" class="p-2 border rounded-md"
+                        placeholder="Enter your reference number" required>
+                </div>
+
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button type="button" id="closeStatusModal2" class="px-4 py-2 bg-gray-300 rounded-md">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600">
+                        Check Status
+                    </button>
+                </div>
+            </form>
+
+            <div id="statusResult" class="mt-4 hidden">
+                <div class="border-t pt-4">
+                    <h3 class="font-bold text-lg mb-2">Reservation Details</h3>
+                    <div id="statusContent"></div>
+                </div>
+            </div>
+        </div>
     </div>
     <div id="reservationModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
         <div class="w-full max-w-lg p-6 bg-white rounded-lg shadow-lg">
@@ -372,6 +407,111 @@
             if (parseInt(endSelect.value.split(':')[0]) <= startHour) {
                 endSelect.value = (startHour + 1) + ":00:00";
             }
+        });
+    </script>
+    <script>
+        // Status Modal Handling
+        const statusModal = document.getElementById('statusModal');
+        const openStatusBtn = document.getElementById('openStatusModal');
+        const closeStatusBtns = [
+            document.getElementById('closeStatusModal'),
+            document.getElementById('closeStatusModal2')
+        ];
+
+        openStatusBtn.addEventListener('click', () => statusModal.classList.remove('hidden'));
+        closeStatusBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                statusModal.classList.add('hidden');
+                document.getElementById('statusResult').classList.add('hidden');
+            });
+        });
+
+        // Check Status Form Submission
+        document.getElementById('checkStatusForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const statusResult = document.getElementById('statusResult');
+            const statusContent = document.getElementById('statusContent');
+
+            fetch('{{ route("reservation.check-status") }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'not_found') {
+                        statusContent.innerHTML = `
+                <div class="bg-red-100 border border-red-200 text-red-700 p-3 rounded">
+                    ${data.message}
+                </div>
+            `;
+                    } else {
+                        const reservation = data.reservation;
+                        const date = new Date(reservation.date);
+                        const formattedDate = date.toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+
+                        const startTime = new Date('2000-01-01T' + reservation.start_time).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                        const endTime = new Date('2000-01-01T' + reservation.end_time).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+
+                        let statusBadge = '';
+                        if (data.detailed_status === 'cancelled') {
+                            statusBadge = `<span class="bg-red-500 text-white px-2 py-1 rounded text-xs">Cancelled</span>`;
+                        } else if (data.detailed_status === 'pending') {
+                            statusBadge = `<span class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">Pending</span>`;
+                        } else if (data.detailed_status === 'ongoing') {
+                            statusBadge = `<span class="bg-blue-500 text-white px-2 py-1 rounded text-xs">Upcoming</span>`;
+                        } else if (data.detailed_status === 'completed') {
+                            statusBadge = `<span class="bg-green-500 text-white px-2 py-1 rounded text-xs">Completed</span>`;
+                        }
+
+                        let remarksSection = '';
+                        if (reservation.status === 'cancelled' && reservation.remarks) {
+                            remarksSection = `
+                    <div class="mt-3">
+                        <h4 class="font-semibold">Remarks:</h4>
+                        <p class="text-gray-700">${reservation.remarks}</p>
+                    </div>
+                `;
+                        }
+
+                        statusContent.innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span class="font-semibold">Status: ${statusBadge}</span>
+                       
+                    </div>
+              
+                    <div><span class="font-semibold">Room:</span> ${data.room_name}</div>
+                    <div><span class="font-semibold">Date:</span> ${formattedDate}</div>
+                    <div><span class="font-semibold">Time:</span> ${startTime} - ${endTime}</div>
+                    <div><span class="font-semibold">Teacher:</span> ${reservation.teacher_name}</div>
+                    <div><span class="font-semibold">Subject:</span> ${reservation.subject}</div>
+                    ${remarksSection}
+                    <div class="mt-3 text-sm text-gray-500">
+                        Current server time: ${data.current_time}
+                    </div>
+                </div>
+            `;
+                    }
+
+                    statusResult.classList.remove('hidden');
+                });
         });
     </script>
 

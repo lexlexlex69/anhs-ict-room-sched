@@ -12,7 +12,18 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <style>
-        /* Add to your existing styles */
+        #statusContent div {
+            margin-bottom: 0.5rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
         .slot-suggestion {
             transition: all 0.2s ease;
         }
