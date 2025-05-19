@@ -202,8 +202,8 @@
                 </li>
                 @elseif(Auth::user()->user_type == 2)
                 <li>
-                    <a href="{{ url('teacher/dashboard') }}" class="flex items-center p-3 rounded-lg 
-                            {{ Request::is('teacher/dashboard') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">
+                    <a href="{{ url('teacher/schedule/today') }}" class="flex items-center p-3 rounded-lg 
+                            {{ Request::is('teacher/schedule/today') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">
                         <i class="fa-solid fa-chalkboard text-lg mr-3"></i> Teacher Dashboard
                     </a>
                 </li>

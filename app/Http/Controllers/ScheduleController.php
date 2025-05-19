@@ -367,6 +367,15 @@ class ScheduleController extends Controller
             'end_time' => $request->end_time,
         ]);
 
+        $admin = User::where('user_type', '1')->first(); // Assuming '1' is the admin user type
+
+        Notification::create([
+            'user_id' => $admin->id,
+            'message' => "A new weekly schedule has been created by " . Auth::user()->first_name .
+                " for {$request->day} from {$request->start_time} to {$request->end_time}.",
+        ]);
+
+
         return redirect()->back()->with('success', 'Weekly schedule created successfully!');
     }
 
@@ -380,6 +389,14 @@ class ScheduleController extends Controller
         }
 
         $schedule->delete();
+
+        $admin = User::where('user_type', '1')->first(); // Assuming '1' is the admin user type
+
+        Notification::create([
+            'user_id' => $admin->id,
+            'message' => "A weekly schedule has been deleted by " . Auth::user()->first_name .
+                " for {$schedule->day} from {$schedule->start_time} to {$schedule->end_time}.",
+        ]);
 
         return redirect()->back()->with('success', 'Schedule deleted successfully!');
     }
