@@ -133,34 +133,7 @@
         <nav class="mt-6 font-karla font-extrabold">
             <ul class="space-y-4">
                 @if(Auth::user()->user_type == 1)
-                <li class="relative group">
 
-                    <button class="flex items-center w-full p-3 rounded-lg text-left 
-        {{ Request::is('admin/schedules*') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray hover:bg-white hover:bg-opacity-20' }}">
-
-
-                        <i class="fa-solid fa-chalkboard text-lg mr-3"></i> Schedule
-                        <i class="fa-solid fa-chevron-down ml-auto"></i>
-                    </button>
-
-                    <ul class="absolute left-0 mt-0 w-48 bg-white bg-opacity-90 text-sm text-blue-900 rounded shadow-lg hidden group-hover:block z-10">
-                        <li>
-                            <a href="{{ url('admin/schedules/AllList') }}" class="block px-4 py-2 hover:bg-blue-100">All Schedules</a>
-                        </li>
-                        <li>
-                            <a href="{{ url('admin/schedules/upcoming') }}" class="block px-4 py-2 hover:bg-blue-100">Upcoming</a>
-                        </li>
-                        <li>
-                            <a href="{{ url('admin/schedules/ongoing') }}" class="block px-4 py-2 hover:bg-blue-100">Ongoing</a>
-                        </li>
-                        <li>
-                            <a href="{{ url('admin/schedules/completed') }}" class="block px-4 py-2 hover:bg-blue-100">Completed</a>
-                        </li>
-                        <li>
-                            <a href="{{ url('admin/schedules/declined') }}" class="block px-4 py-2 hover:bg-blue-100">Decline</a>
-                        </li>
-                    </ul>
-                </li>
 
                 <li>
                     <a href="{{ url('admin/schedule/list') }}" class="flex items-center p-3 rounded-lg 
@@ -171,7 +144,7 @@
                 <li>
                     <a href="{{ url('admin/reservations') }}" class="flex items-center p-3 rounded-lg 
                             {{ Request::is('admin/reservations') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">
-                        <i class="fa-solid fa-calendar text-lg mr-3 "></i> Reservations
+                        <i class="fa-solid fa-clock text-lg mr-3 "></i> Reservations
                     </a>
                 </li>
                 <li>
@@ -190,7 +163,7 @@
                 <li>
                     <a href="{{ url('admin/schedule/all') }}" class="flex items-center p-3 rounded-lg 
                     {{ Request::is('admin/schedule/all') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">
-                        <i class="fa-solid fa-chalkboard-teacher text-lg mr-3"></i> Weekly Schedules
+                        <i class="fa-solid fa-clipboard text-lg mr-3"></i> Weekly Schedules
                     </a>
                 </li>
 

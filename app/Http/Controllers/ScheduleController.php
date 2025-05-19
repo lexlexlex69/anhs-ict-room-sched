@@ -332,7 +332,9 @@ class ScheduleController extends Controller
         // Define days of the week
         $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
-        return view('teacher.schedule.weekly', compact('getRoom', 'weeklySchedules', 'days'));
+        $currentTime = now()->format('h:i A');
+
+        return view('teacher.schedule.weekly', compact('getRoom', 'weeklySchedules', 'days', 'currentTime'));
     }
 
     public function storeWeeklySchedule(Request $request)
