@@ -421,4 +421,59 @@ class ScheduleController extends Controller
 
         return view('admin.schedule.all', compact('weeklySchedules', 'days', 'rooms', 'teachers'));
     }
+
+    public function todaySchedule()
+    {
+        $user = Auth::user();
+        $today = now()->format('Y-m-d');
+
+        // Get today's fixed weekly schedules
+        $dayOfWeek = strtolower(now()->englishDayOfWeek);
+        $weeklySchedules = WeeklySchedule::with('room')
+            ->where('teacher_id', $user->id)
+            ->where('day', $dayOfWeek)
+            ->orderBy('start_time')
+            ->get()
+            ->map(function ($schedule) {
+                return $this->addScheduleStatus($schedule, now());
+            });
+
+        // Get today's one-time schedules
+        $oneTimeSchedules = Schedule::with('room')
+            ->where('teacher_id', $user->id)
+            ->where('date', $today)
+            ->orderBy('start_time')
+            ->get()
+            ->map(function ($schedule) {
+                return $this->addScheduleStatus($schedule, now());
+            });
+
+        // Combine and sort all schedules
+        $allSchedules = $weeklySchedules->merge($oneTimeSchedules)
+            ->sortBy('start_time');
+
+        return view('teacher.schedule.today', [
+            'schedules' => $allSchedules,
+            'currentTime' => now()->format('h:i A')
+        ]);
+    }
+
+    private function addScheduleStatus($schedule, $now)
+    {
+        $start = Carbon::parse($schedule->date . ' ' . $schedule->start_time);
+        $end = Carbon::parse($schedule->date . ' ' . $schedule->end_time);
+
+        if ($now < $start) {
+            $schedule->status = 'pending';
+            $schedule->status_badge = 'bg-yellow-100 text-yellow-800';
+        } elseif ($now >= $start && $now <= $end) {
+            $schedule->status = 'ongoing';
+            $schedule->status_badge = 'bg-blue-100 text-blue-800';
+        } else {
+            $schedule->status = 'completed';
+            $schedule->status_badge = 'bg-green-100 text-green-800';
+        }
+
+        return $schedule;
+    }
 }

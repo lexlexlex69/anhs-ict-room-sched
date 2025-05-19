@@ -106,4 +106,7 @@ Route::group(['middleware' => 'teacher'], function () {
   Route::get('teacher/schedule/weekly', [ScheduleController::class, 'weeklyScheduleList'])->name('teacher.schedule.weekly');
   Route::post('teacher/schedule/weekly', [ScheduleController::class, 'storeWeeklySchedule'])->name('teacher.schedule.weekly.store');
   Route::delete('teacher/schedule/weekly/delete/{id}', [ScheduleController::class, 'deleteWeeklySchedule'])->name('teacher.schedule.weekly.delete');
+
+  Route::get('teacher/schedule/today', [ScheduleController::class, 'todaySchedule'])
+    ->name('teacher.schedule.today');
 });
