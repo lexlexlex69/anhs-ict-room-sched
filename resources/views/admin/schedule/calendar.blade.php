@@ -162,7 +162,31 @@
 
 <!-- JavaScript -->
 <script>
+    function refreshStatusIndicators() {
+        document.querySelectorAll('[data-schedule-start]').forEach(el => {
+            const start = new Date(el.dataset.scheduleStart);
+            const end = new Date(el.dataset.scheduleEnd);
+            const now = new Date();
+            const statusDot = el.querySelector('.status-dot');
+
+            if (now > end) {
+                statusDot.classList.remove('bg-yellow-500', 'bg-blue-500');
+                statusDot.classList.add('bg-green-500');
+            } else if (now >= start && now <= end) {
+                statusDot.classList.remove('bg-yellow-500', 'bg-green-500');
+                statusDot.classList.add('bg-blue-500');
+            } else {
+                statusDot.classList.remove('bg-green-500', 'bg-blue-500');
+                statusDot.classList.add('bg-yellow-500');
+            }
+        });
+    }
+
+    // Call initially and set interval
+    refreshStatusIndicators();
+    setInterval(refreshStatusIndicators, 60000);
     // Modal functions
+    // Update modal status indicators when opened
     function openDayModal(date, title) {
         fetch(`/admin/calendar/day-details?date=${date}`)
             .then(response => response.text())
@@ -170,6 +194,19 @@
                 document.getElementById('modalTitle').textContent = title;
                 document.getElementById('modalContent').innerHTML = html;
                 document.getElementById('dayModal').classList.remove('hidden');
+
+                // Set up auto-refresh for modal status indicators
+                const modalRefreshInterval = setInterval(() => {
+                    fetch(`/admin/calendar/day-details?date=${date}`)
+                        .then(response => response.text())
+                        .then(html => {
+                            if (!document.getElementById('dayModal').classList.contains('hidden')) {
+                                document.getElementById('modalContent').innerHTML = html;
+                            } else {
+                                clearInterval(modalRefreshInterval);
+                            }
+                        });
+                }, 60000);
             });
     }
 
