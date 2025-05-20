@@ -4,13 +4,14 @@
 
 <main class="relative z-10 flex-1 px-8 font-karla font-semibold">
     <!-- Top Bar -->
-    <header class="flex justify-between items-center bg-white text-gray px-6 py-4 rounded-lg shadow-md">
-        <div class="flex items-center space-x-5">
-            <i class="fa-solid fa-calendar-month text-lg"></i>
-            <span class="text-sm">{{ Carbon::create($currentYear, $currentMonth, 1)->format('F Y') }}</span>
-            <span id="current-time" class="text-sm font-semibold">{{ now()->format('g:i A') }}</span>
+    <header class="flex flex-col sm:flex-row justify-between items-center bg-white text-gray-700 px-4 sm:px-6 py-4 rounded-lg shadow-md space-y-2 sm:space-y-0">
+        <div class="flex items-center space-x-4">
+            <i class="fa-solid fa-calendar-day text-lg"></i>
+            <span class="text-sm font-semibold">Today's Schedule</span>
+            <span class="text-sm">{{ now()->format('l, F j, Y') }}</span>
         </div>
         <div class="flex items-center space-x-4">
+            <span class="text-sm font-semibold">Current Time: {{ $currentTime }}</span>
             <span class="text-sm font-semibold">Welcome, {{ Auth::user()->first_name }}!</span>
         </div>
     </header>
@@ -53,41 +54,52 @@
         @endforeach
     </div>
 
-    <!-- Weekly Calendar Grids -->
+    <!-- Calendar Grid -->
     @foreach($weeks as $week)
     <div class="grid grid-cols-7 gap-px bg-gray-200 mb-1">
         @foreach($week['days'] as $day)
-        <div class="bg-white min-h-40 p-1 {{ $day['is_today'] ? 'border-2 border-blue-400' : '' }} {{ !$day['in_month'] ? 'bg-gray-50' : '' }}">
+        <div
+            class="bg-white min-h-[10.5rem] p-1 {{ $day['is_today'] ? 'border-2 border-blue-400' : '' }} {{ !$day['in_month'] ? 'bg-gray-50' : '' }} cursor-pointer hover:bg-gray-50"
+            onclick="openDayModal('{{ $day['date'] }}', '{{ Carbon::parse($day['date'])->format('l, F j, Y') }}')">
             <!-- Date Number -->
             <div class="text-right font-semibold text-sm mb-1 {{ !$day['in_month'] ? 'text-gray-400' : '' }}">
-                {{ Carbon::parse($day['date'])->format('j') }}
+                {{ $day['day_number'] }}
             </div>
 
             @if($day['in_month'])
-            <!-- Display weekly schedule only -->
             @php
             $daySchedules = $weeklySchedules[$day['day_name']] ?? [];
+            $now = now();
             @endphp
 
             @if(count($daySchedules) > 0)
-            <div class="space-y-1">
+            <div class="space-y-1  max-h-full overflow-y-auto text-xs">
                 @foreach($daySchedules as $schedule)
-                <div class="text-xs p-1 rounded bg-green-50 border border-green-100 mb-1">
-                    <div class="font-medium truncate">
-                        {{ $schedule->room->room_name }}
-                    </div>
-                    <div class="text-xs">
-                        {{ Carbon::parse($schedule->start_time)->format('g:i A') }} -
-                        {{ Carbon::parse($schedule->end_time)->format('g:i A') }}
-                    </div>
-                    <div class="text-xs truncate">
-                        {{ $schedule->room->subject ?? '' }}
+                @php
+                $start = Carbon::parse($day['date'] . ' ' . $schedule->start_time);
+                $end = Carbon::parse($day['date'] . ' ' . $schedule->end_time);
+                $status = $now->gt($end) ? 'done' : ($now->between($start, $end) ? 'ongoing' : 'upcoming');
+                @endphp
+                <div class="p-1 rounded bg-green-50 border border-green-100 mb-1">
+                    <div class="flex items-start">
+                        <span class="w-2 h-2 rounded-full mt-1 mr-1 flex-shrink-0
+                    @if($status === 'done') bg-green-500 @elseif($status === 'ongoing') bg-blue-500 @else bg-yellow-500 @endif">
+                        </span>
+                        <div class="flex-grow min-w-0">
+                            <div class="font-medium text-green-700 truncate">
+                                {{ $schedule->room->room_name }}
+                            </div>
+                            <div class="text-gray-600 truncate">
+                                {{ Carbon::parse($schedule->start_time)->format('g:i') }}-{{ Carbon::parse($schedule->end_time)->format('g:i A') }}
+                            </div>
+                            <div class="text-gray-500 truncate text-xs">
+                                {{ $schedule->room->subject ?? 'General' }}
+                            </div>
+                        </div>
                     </div>
                 </div>
                 @endforeach
             </div>
-            @else
-            <div class="text-center text-gray-400 mt-4 text-xs">No classes</div>
             @endif
             @endif
         </div>

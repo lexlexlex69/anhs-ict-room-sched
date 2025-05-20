@@ -476,9 +476,9 @@
                         if (data.detailed_status === 'cancelled') {
                             statusBadge = `<span class="bg-red-500 text-white px-2 py-1 rounded text-xs">Cancelled</span>`;
                         } else if (data.detailed_status === 'pending') {
-                            statusBadge = `<span class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">Pending</span>`;
+                            statusBadge = `<span class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">Upcoming</span>`;
                         } else if (data.detailed_status === 'ongoing') {
-                            statusBadge = `<span class="bg-blue-500 text-white px-2 py-1 rounded text-xs">Upcoming</span>`;
+                            statusBadge = `<span class="bg-blue-500 text-white px-2 py-1 rounded text-xs">Ongoing</span>`;
                         } else if (data.detailed_status === 'completed') {
                             statusBadge = `<span class="bg-green-500 text-white px-2 py-1 rounded text-xs">Completed</span>`;
                         }
