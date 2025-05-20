@@ -44,7 +44,22 @@
             Next Year ▶
         </a>
     </div>
+    <!-- Legend - Moved Above Calendar -->
+    <div class="flex justify-center space-x-4 mb-2">
 
+        <div class="flex items-center">
+            <div class="w-2 h-2 rounded-full bg-green-500 mr-1"></div>
+            <span class="text-xs">Done</span>
+        </div>
+        <div class="flex items-center">
+            <div class="w-2 h-2 rounded-full bg-blue-500 mr-1"></div>
+            <span class="text-xs">Ongoing</span>
+        </div>
+        <div class="flex items-center">
+            <div class="w-2 h-2 rounded-full bg-yellow-500 mr-1"></div>
+            <span class="text-xs">Upcoming</span>
+        </div>
+    </div>
     <!-- Day Headers -->
     <div class="grid grid-cols-7 bg-gray-100 mb-1 rounded-t-lg">
         @foreach(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as $day)
