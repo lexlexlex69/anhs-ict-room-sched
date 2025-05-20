@@ -158,8 +158,8 @@
 
 
                 <li>
-                    <a href="{{ url('admin/schedule/list') }}" class="flex items-center p-3 rounded-lg 
-                            {{ Request::is('admin/schedule/list') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">
+                    <a href="{{ url('admin/schedule/calendar') }}" class="flex items-center p-3 rounded-lg 
+                            {{ Request::is('admin/schedule/calendar') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">
                         <i class="fa-solid fa-calendar text-lg mr-3 "></i> Calendar
                     </a>
                 </li>

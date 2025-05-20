@@ -76,6 +76,7 @@ Route::group(['middleware' => 'admin'], function () {
 
   //Admin view all schedule 
   Route::get('admin/schedule/all', [ScheduleController::class, 'allSchedules'])->name('admin.schedule.all');
+  Route::get('admin/schedule/calendar', [ScheduleController::class, 'adminCalendar'])->name('admin.schedule.calendar');
 
   //view all reservations
   Route::get('admin/reservations', [ReservationController::class, 'adminIndex'])->name('admin.reservations');

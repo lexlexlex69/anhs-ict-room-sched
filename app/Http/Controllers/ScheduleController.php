@@ -557,4 +557,70 @@ class ScheduleController extends Controller
             'endOfMonth'
         ));
     }
+
+    public function adminCalendar(Request $request)
+    {
+        // Get current month and year or use requested values
+        $currentMonth = $request->input('month', date('m'));
+        $currentYear = $request->input('year', date('Y'));
+
+        // Get all weekly schedules for all teachers
+        $weeklySchedules = WeeklySchedule::with(['room', 'teacher'])
+            ->orderByRaw("FIELD(day, 'monday', 'tuesday', 'wednesday', 'thursday', 'friday')")
+            ->orderBy('start_time')
+            ->get()
+            ->groupBy('day');
+
+        // Get all reservations for the selected month
+        $reservations = Reservation::with(['room'])
+            ->active()
+            ->whereYear('date', $currentYear)
+            ->whereMonth('date', $currentMonth)
+            ->orderBy('date')
+            ->orderBy('start_time')
+            ->get()
+            ->groupBy(function ($item) {
+                return \Carbon\Carbon::parse($item->date)->format('Y-m-d');
+            });
+
+        // Prepare weeks of the month
+        $weeks = [];
+        $startOfMonth = Carbon::create($currentYear, $currentMonth, 1)->startOfMonth();
+        $endOfMonth = Carbon::create($currentYear, $currentMonth, 1)->endOfMonth();
+
+        $currentWeek = $startOfMonth->copy()->startOfWeek();
+
+        while ($currentWeek <= $endOfMonth) {
+            $week = [];
+            $week['start'] = $currentWeek->copy();
+            $week['end'] = $currentWeek->copy()->endOfWeek();
+
+            // Prepare days for this week
+            $week['days'] = [];
+            for ($i = 0; $i < 7; $i++) {
+                $dayDate = $currentWeek->copy()->addDays($i);
+                $dayName = strtolower($dayDate->format('l'));
+
+                $week['days'][] = [
+                    'date' => $dayDate->format('Y-m-d'),
+                    'day_name' => $dayName,
+                    'is_today' => $dayDate->isToday(),
+                    'in_month' => $dayDate->month == $currentMonth,
+                ];
+            }
+
+            $weeks[] = $week;
+            $currentWeek->addWeek();
+        }
+
+        return view('admin.schedule.calendar', compact(
+            'weeklySchedules',
+            'reservations',
+            'weeks',
+            'currentMonth',
+            'currentYear',
+            'startOfMonth',
+            'endOfMonth'
+        ));
+    }
 }

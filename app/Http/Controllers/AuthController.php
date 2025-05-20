@@ -21,7 +21,7 @@ class AuthController extends Controller
 
         if (!empty(Auth::check())) {
             if (Auth::user()->user_type == 1) {
-                return redirect('admin/schedule/list');
+                return redirect('admin/schedule/calendar');
             } else if (Auth::user()->user_type == 2) {
                 return redirect('teacher/schedule/today');
             }
@@ -36,7 +36,7 @@ class AuthController extends Controller
 
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password], $remember)) {
             if (Auth::user()->user_type == 1) {
-                return redirect('admin/schedule/list');
+                return redirect('admin/schedule/calendar');
             } else if (Auth::user()->user_type == 2) {
                 return redirect('teacher/schedule/today');
             }
