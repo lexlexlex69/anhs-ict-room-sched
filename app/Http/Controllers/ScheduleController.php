@@ -502,4 +502,59 @@ class ScheduleController extends Controller
 
         return $schedule;
     }
+
+    public function teacherScheduleCalendar(Request $request)
+    {
+        $user = Auth::user();
+
+        // Get current month and year or use requested values
+        $currentMonth = $request->input('month', date('m'));
+        $currentYear = $request->input('year', date('Y'));
+
+        // Get all weekly schedules for the teacher
+        $weeklySchedules = WeeklySchedule::with(['room'])
+            ->where('teacher_id', $user->id)
+            ->get()
+            ->groupBy('day');
+
+        // Prepare weeks of the month
+        $weeks = [];
+        $startOfMonth = Carbon::create($currentYear, $currentMonth, 1)->startOfMonth();
+        $endOfMonth = Carbon::create($currentYear, $currentMonth, 1)->endOfMonth();
+
+        $currentWeek = $startOfMonth->copy()->startOfWeek();
+
+        while ($currentWeek <= $endOfMonth) {
+            $week = [];
+            $week['start'] = $currentWeek->copy();
+            $week['end'] = $currentWeek->copy()->endOfWeek();
+
+            // Prepare days for this week
+            $week['days'] = [];
+            for ($i = 0; $i < 7; $i++) {
+                $dayDate = $currentWeek->copy()->addDays($i);
+                $dayName = strtolower($dayDate->format('l'));
+
+                $week['days'][] = [
+                    'date' => $dayDate->format('Y-m-d'),
+                    'day_name' => $dayName,
+                    'is_today' => $dayDate->isToday(),
+                    'in_month' => $dayDate->month == $currentMonth,
+                ];
+            }
+
+            $weeks[] = $week;
+            $currentWeek->addWeek();
+        }
+
+        return view('teacher.schedule.calendar', compact(
+            'user',
+            'weeklySchedules',
+            'weeks',
+            'currentMonth',
+            'currentYear',
+            'startOfMonth',
+            'endOfMonth'
+        ));
+    }
 }

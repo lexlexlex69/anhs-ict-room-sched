@@ -12,6 +12,28 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <style>
+        /* Time slot styling */
+        .min-h-96 {
+            min-height: 24rem;
+            /* Adjust as needed */
+        }
+
+        .time-slot {
+            height: 40px;
+            /* Adjust based on your needs */
+            border-bottom: 1px solid #e5e7eb;
+            position: relative;
+        }
+
+        /* Current time indicator */
+        .current-time-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background-color: red;
+            z-index: 10;
+        }
+
         #statusContent div {
             margin-bottom: 0.5rem;
         }
@@ -181,11 +203,18 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ url('teacher/schedule/calendar') }}" class="flex items-center p-3 rounded-lg 
+                            {{ Request::is('teacher/schedule/calendar') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">
+                        <i class="fa-solid fa-calendar-alt text-lg mr-3"></i> Calendar
+                    </a>
+                </li>
+                <li>
                     <a href="{{ url('teacher/schedule/weekly') }}" class="flex items-center p-3 rounded-lg 
                             {{ Request::is('teacher/schedule/weekly') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">
                         <i class="fa-solid fa-calendar-alt text-lg mr-3"></i> Weekly Schedule
                     </a>
                 </li>
+
                 <li>
                     <a href="{{ url('teacher/account') }}" class="flex items-center p-3 rounded-lg 
                             {{ Request::is('teacher/account') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">

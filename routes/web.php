@@ -109,4 +109,6 @@ Route::group(['middleware' => 'teacher'], function () {
 
   Route::get('teacher/schedule/today', [ScheduleController::class, 'todaySchedule'])
     ->name('teacher.schedule.today');
+
+  Route::get('teacher/schedule/calendar', [ScheduleController::class, 'teacherScheduleCalendar'])->name('teacher.schedule.calendar');
 });
