@@ -54,6 +54,18 @@
             <div class="w-4 h-4 bg-blue-100 border border-blue-200 mr-2"></div>
             <span class="text-xs">Reservation</span>
         </div>
+        <div class="flex items-center">
+            <div class="w-2 h-2 rounded-full bg-green-500 mr-1"></div>
+            <span class="text-xs">Done</span>
+        </div>
+        <div class="flex items-center">
+            <div class="w-2 h-2 rounded-full bg-blue-500 mr-1"></div>
+            <span class="text-xs">Ongoing</span>
+        </div>
+        <div class="flex items-center">
+            <div class="w-2 h-2 rounded-full bg-yellow-500 mr-1"></div>
+            <span class="text-xs">Upcoming</span>
+        </div>
     </div>
 
     <!-- Calendar Container with Scroll -->
@@ -86,12 +98,21 @@
                     $daySchedules = $weeklySchedules[$day['day_name']] ?? [];
                     $dayReservations = $reservations[$day['date']] ?? [];
                     $totalItems = count($daySchedules) + count($dayReservations);
+                    $now = now();
                     @endphp
 
                     @if($totalItems > 0)
-                    <div class="space-y-1 max-h-[10.5rem] overflow-y-auto">
+                    <div class="space-y-1 max-h-full overflow-y-auto">
                         @foreach($daySchedules as $schedule)
-                        <div class="text-xs p-1 rounded bg-green-50 border border-green-100 mb-1 truncate">
+                        @php
+                        $start = Carbon::parse($day['date'] . ' ' . $schedule->start_time);
+                        $end = Carbon::parse($day['date'] . ' ' . $schedule->end_time);
+                        $status = $now->gt($end) ? 'done' : ($now->between($start, $end) ? 'ongoing' : 'upcoming');
+                        @endphp
+                        <div class="text-xs p-1 rounded bg-green-50 border border-green-100 mb-1 truncate flex items-center">
+                            <span class="w-2 h-2 rounded-full mr-1 
+                    @if($status === 'done') bg-green-500 @elseif($status === 'ongoing') bg-blue-500 @else bg-yellow-500 @endif">
+                            </span>
                             <span class="text-green-700 font-medium">
                                 {{ $schedule->teacher->first_name }} ({{ $schedule->room->room_name }})
                             </span>
@@ -99,7 +120,15 @@
                         @endforeach
 
                         @foreach($dayReservations as $reservation)
-                        <div class="text-xs p-1 rounded bg-blue-50 border border-blue-100 mb-1 truncate">
+                        @php
+                        $start = Carbon::parse($reservation->date . ' ' . $reservation->start_time);
+                        $end = Carbon::parse($reservation->date . ' ' . $reservation->end_time);
+                        $status = $now->gt($end) ? 'done' : ($now->between($start, $end) ? 'ongoing' : 'upcoming');
+                        @endphp
+                        <div class="text-xs p-1 rounded bg-blue-50 border border-blue-100 mb-1 truncate flex items-center">
+                            <span class="w-2 h-2 rounded-full mr-1 
+                    @if($status === 'done') bg-green-500 @elseif($status === 'ongoing') bg-blue-500 @else bg-yellow-500 @endif">
+                            </span>
                             <span class="text-blue-700 font-medium">
                                 {{ $reservation->teacher_name }} ({{ $reservation->room->room_name }})
                             </span>
