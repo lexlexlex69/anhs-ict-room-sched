@@ -2,7 +2,7 @@
 @php use Carbon\Carbon; @endphp
 @section('content')
 
-<main class="relative z-10 flex-1 px-8 font-karla font-semibold">
+<main class="relative z-10 flex-1 px-8 font-karla font-semibold flex flex-col" style="height: calc(100vh - 8rem);">
     <!-- Top Bar -->
     <header class="flex justify-between items-center bg-white text-gray px-6 py-4 rounded-lg shadow-md">
         <div class="flex items-center space-x-5">
@@ -16,7 +16,7 @@
     </header>
 
     <!-- Month Navigation -->
-    <div class="flex justify-between items-center my-6">
+    <div class="flex justify-between items-center my-4">
         <a href="?month={{ $currentMonth }}&year={{ $currentYear - 1 }}" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
             ◀ Previous Year
         </a>
@@ -44,78 +44,8 @@
         </a>
     </div>
 
-    <!-- Day Headers -->
-    <div class="grid grid-cols-7 bg-gray-100 mb-1 rounded-t-lg">
-        @foreach(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as $day)
-        <div class="p-2 text-center font-semibold">
-            {{ substr($day, 0, 3) }}
-        </div>
-        @endforeach
-    </div>
-
-    <!-- Calendar Grid -->
-    @foreach($weeks as $week)
-    <div class="grid grid-cols-7 gap-px bg-gray-200 mb-1">
-        @foreach($week['days'] as $day)
-        <div class="bg-white min-h-40 p-1 {{ $day['is_today'] ? 'border-2 border-blue-400' : '' }} {{ !$day['in_month'] ? 'bg-gray-50' : '' }}">
-            <!-- Date Number -->
-            <div class="text-right font-semibold text-sm mb-1 {{ !$day['in_month'] ? 'text-gray-400' : '' }}">
-                {{ Carbon::parse($day['date'])->format('j') }}
-            </div>
-
-            @if($day['in_month'])
-            <!-- Weekly Schedules (Teachers - Green) -->
-            @php
-            $daySchedules = $weeklySchedules[$day['day_name']] ?? [];
-            @endphp
-
-            @foreach($daySchedules as $schedule)
-            <div class="text-xs p-1 rounded bg-green-50 border border-green-100 mb-1">
-                <div class="font-medium truncate text-green-700">
-                    <i class="fas fa-chalkboard-teacher mr-1"></i>
-                    {{ $schedule->teacher->first_name }} {{ $schedule->teacher->last_name }}
-                </div>
-                <div class="text-xs">
-                    {{ Carbon::parse($schedule->start_time)->format('g:i A') }} -
-                    {{ Carbon::parse($schedule->end_time)->format('g:i A') }}
-                </div>
-                <div class="text-xs truncate">
-                    {{ $schedule->room->room_name }}
-                </div>
-            </div>
-            @endforeach
-
-            <!-- Reservations (Reservees - Blue) -->
-            @if(isset($reservations[$day['date']]))
-            @foreach($reservations[$day['date']] as $reservation)
-            <div class="text-xs p-1 rounded bg-blue-50 border border-blue-100 mb-1">
-                <div class="font-medium truncate text-blue-700">
-                    <i class="fas fa-user mr-1"></i>
-                    {{ $reservation->teacher_name }}
-                </div>
-                <div class="text-xs">
-                    {{ Carbon::parse($reservation->start_time)->format('g:i A') }} -
-                    {{ Carbon::parse($reservation->end_time)->format('g:i A') }}
-                </div>
-                <div class="text-xs truncate">
-                    {{ $reservation->room->room_name }}
-                </div>
-                @if($reservation->reference_number)
-                <div class="text-xs text-gray-500 truncate">
-                    Ref: {{ $reservation->reference_number }}
-                </div>
-                @endif
-            </div>
-            @endforeach
-            @endif
-            @endif
-        </div>
-        @endforeach
-    </div>
-    @endforeach
-
-    <!-- Legend -->
-    <div class="mt-4 flex justify-center space-x-4">
+    <!-- Legend - Moved Above Calendar -->
+    <div class="flex justify-center space-x-4 mb-2">
         <div class="flex items-center">
             <div class="w-4 h-4 bg-green-100 border border-green-200 mr-2"></div>
             <span class="text-xs">Teacher Schedule</span>
@@ -125,12 +55,108 @@
             <span class="text-xs">Reservation</span>
         </div>
     </div>
+
+    <!-- Calendar Container with Scroll -->
+    <div class="flex-grow overflow-auto">
+        <!-- Day Headers -->
+        <div class="grid grid-cols-7 bg-gray-100 sticky top-0 z-10">
+            @foreach(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as $day)
+            <div class="p-2 text-center font-semibold">
+                {{ substr($day, 0, 3) }}
+            </div>
+            @endforeach
+        </div>
+
+        <!-- Calendar Grid -->
+        <div class="grid auto-rows-min gap-px bg-gray-200">
+            @foreach($weeks as $week)
+            <div class="grid grid-cols-7">
+                @foreach($week['days'] as $day)
+                <div
+                    class="bg-white min-h-[10.5rem] p-1 {{ $day['is_today'] ? 'border-2 border-blue-400' : '' }} {{ !$day['in_month'] ? 'bg-gray-50' : '' }} cursor-pointer hover:bg-gray-50"
+                    onclick="openDayModal('{{ $day['date'] }}', '{{ Carbon::parse($day['date'])->format('l, F j, Y') }}')">
+                    <!-- Date Number -->
+                    <div class="text-right font-semibold text-sm mb-1 {{ !$day['in_month'] ? 'text-gray-400' : '' }}">
+                        {{ Carbon::parse($day['date'])->format('j') }}
+                    </div>
+
+                    @if($day['in_month'])
+                    <!-- Compact Schedule Display -->
+                    @php
+                    $daySchedules = $weeklySchedules[$day['day_name']] ?? [];
+                    $dayReservations = $reservations[$day['date']] ?? [];
+                    $totalItems = count($daySchedules) + count($dayReservations);
+                    @endphp
+
+                    @if($totalItems > 0)
+                    <div class="space-y-1 max-h-[10.5rem] overflow-y-auto">
+                        @foreach($daySchedules as $schedule)
+                        <div class="text-xs p-1 rounded bg-green-50 border border-green-100 mb-1 truncate">
+                            <span class="text-green-700 font-medium">
+                                {{ $schedule->teacher->first_name }} ({{ $schedule->room->room_name }})
+                            </span>
+                        </div>
+                        @endforeach
+
+                        @foreach($dayReservations as $reservation)
+                        <div class="text-xs p-1 rounded bg-blue-50 border border-blue-100 mb-1 truncate">
+                            <span class="text-blue-700 font-medium">
+                                {{ $reservation->teacher_name }} ({{ $reservation->room->room_name }})
+                            </span>
+                        </div>
+                        @endforeach
+                    </div>
+                    @endif
+                    @endif
+                </div>
+                @endforeach
+            </div>
+            @endforeach
+        </div>
+    </div>
 </main>
+
+<!-- Day Detail Modal -->
+<div id="dayModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[80vh] flex flex-col">
+        <div class="flex justify-between items-center border-b px-6 py-4">
+            <h3 id="modalTitle" class="text-lg font-bold"></h3>
+            <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="modalContent" class="p-6 overflow-y-auto flex-grow">
+            <!-- Content will be loaded here -->
+        </div>
+    </div>
+</div>
 
 <!-- JavaScript -->
 <script>
+    // Modal functions
+    function openDayModal(date, title) {
+        fetch(`/admin/calendar/day-details?date=${date}`)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('modalTitle').textContent = title;
+                document.getElementById('modalContent').innerHTML = html;
+                document.getElementById('dayModal').classList.remove('hidden');
+            });
+    }
+
+    function closeModal() {
+        document.getElementById('dayModal').classList.add('hidden');
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('dayModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+
+    // Calendar navigation
     document.addEventListener('DOMContentLoaded', function() {
-        // Handle month/year selection changes
         document.getElementById('month-select').addEventListener('change', function() {
             const month = this.value;
             const year = document.getElementById('year-select').value;

@@ -564,7 +564,11 @@ class ScheduleController extends Controller
         $currentMonth = $request->input('month', date('m'));
         $currentYear = $request->input('year', date('Y'));
 
-        // Get all weekly schedules for all teachers
+        // Set first day of week to Sunday (0)
+        Carbon::setWeekStartsAt(Carbon::SUNDAY);
+        Carbon::setWeekEndsAt(Carbon::SATURDAY);
+
+        // Get all weekly schedules
         $weeklySchedules = WeeklySchedule::with(['room', 'teacher'])
             ->orderByRaw("FIELD(day, 'monday', 'tuesday', 'wednesday', 'thursday', 'friday')")
             ->orderBy('start_time')
@@ -588,14 +592,15 @@ class ScheduleController extends Controller
         $startOfMonth = Carbon::create($currentYear, $currentMonth, 1)->startOfMonth();
         $endOfMonth = Carbon::create($currentYear, $currentMonth, 1)->endOfMonth();
 
-        $currentWeek = $startOfMonth->copy()->startOfWeek();
+        // Start from Sunday of the week containing the 1st of the month
+        $currentWeek = $startOfMonth->copy()->startOfWeek(Carbon::SUNDAY);
 
         while ($currentWeek <= $endOfMonth) {
             $week = [];
             $week['start'] = $currentWeek->copy();
-            $week['end'] = $currentWeek->copy()->endOfWeek();
+            $week['end'] = $currentWeek->copy()->endOfWeek(Carbon::SATURDAY);
 
-            // Prepare days for this week
+            // Prepare days for this week (Sunday to Saturday)
             $week['days'] = [];
             for ($i = 0; $i < 7; $i++) {
                 $dayDate = $currentWeek->copy()->addDays($i);
@@ -606,6 +611,7 @@ class ScheduleController extends Controller
                     'day_name' => $dayName,
                     'is_today' => $dayDate->isToday(),
                     'in_month' => $dayDate->month == $currentMonth,
+                    'day_number' => $dayDate->day,
                 ];
             }
 
@@ -622,5 +628,27 @@ class ScheduleController extends Controller
             'startOfMonth',
             'endOfMonth'
         ));
+    }
+
+
+    public function dayDetails(Request $request)
+    {
+        $date = $request->input('date');
+        $dayName = strtolower(Carbon::parse($date)->format('l'));
+
+        // Get weekly schedules for this day of week
+        $schedules = WeeklySchedule::with(['room', 'teacher'])
+            ->where('day', $dayName)
+            ->orderBy('start_time')
+            ->get();
+
+        // Get reservations for this specific date
+        $reservations = Reservation::with(['room'])
+            ->active()
+            ->where('date', $date)
+            ->orderBy('start_time')
+            ->get();
+
+        return view('admin.schedule.day-details', compact('date', 'schedules', 'reservations'));
     }
 }
