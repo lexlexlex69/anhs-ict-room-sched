@@ -8,6 +8,7 @@ use App\Models\WeeklySchedule;
 use App\Models\Room;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class ReservationController extends Controller
 {
@@ -63,6 +64,14 @@ class ReservationController extends Controller
             'subject' => 'required|string|max:255'
         ]);
 
+        // Determine status based on user type
+        // If an admin (user_type 1) or a guest (no auth) makes a reservation, it's 'approved'.
+        // If a teacher (user_type 2) makes a reservation, it's 'pending' for admin review.
+        $status = 'approved'; // Default for public/admin
+        if (Auth::check() && Auth::user()->user_type == 2) {
+            $status = 'pending'; // For teachers, set to pending
+        }
+
         $reservation = Reservation::create([
             'reference_number' => Reservation::generateReferenceNumber(),
             'room_id' => $request->room_id,
@@ -71,12 +80,13 @@ class ReservationController extends Controller
             'end_time' => $request->end_time,
             'teacher_name' => $request->teacher_name,
             'subject' => $request->subject,
-            'status' => 'approved'
+            'status' => $status // Use the determined status
         ]);
 
         return response()->json([
             'success' => true,
-            'reference_number' => $reservation->reference_number
+            'reference_number' => $reservation->reference_number,
+            'status' => $reservation->status // Return the actual status
         ]);
     }
     // Add this method to your ReservationController
@@ -232,5 +242,10 @@ class ReservationController extends Controller
             'detailed_status' => $detailed_status,
             'current_time' => $now->format('Y-m-d H:i:s')
         ]);
+    }
+    public function teacherCreate()
+    {
+        $rooms = Room::all(); // Fetch all rooms
+        return view('teacher.reservations.create', compact('rooms'));
     }
 }
