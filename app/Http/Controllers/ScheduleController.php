@@ -404,34 +404,52 @@ class ScheduleController extends Controller
         // Get current month and year or use requested values
         $currentMonth = $request->input('month', date('m'));
         $currentYear = $request->input('year', date('Y'));
+        // Get current room filter or use 'All' as default
+        $currentRoom = $request->input('room_id', 'All');
 
         // Set first day of week to Sunday (0)
         Carbon::setWeekStartsAt(Carbon::SUNDAY);
         Carbon::setWeekEndsAt(Carbon::SATURDAY);
 
-        // Get all weekly schedules for the teacher
-        $weeklySchedules = WeeklySchedule::with(['room'])
-            ->where('teacher_id', $user->id)
-            ->get()
-            ->groupBy('day');
+        $startOfMonth = Carbon::create($currentYear, $currentMonth, 1)->startOfMonth();
+        $endOfMonth = Carbon::create($currentYear, $currentMonth, 1)->endOfMonth();
+
+        // Get all weekly schedules for the teacher within the selected month and year based on MainSchedule
+        $weeklySchedulesQuery = WeeklySchedule::with(['room'])
+            ->where('weekly_schedules.teacher_id', $user->id) // FIX: Specify the table for teacher_id
+            ->join('main_schedules', 'weekly_schedules.main_schedule_id', '=', 'main_schedules.id')
+            ->where(function ($query) use ($startOfMonth, $endOfMonth) {
+                // Filter main schedules that overlap with the selected month/year
+                $query->whereDate('main_schedules.start_date', '<=', $endOfMonth)
+                    ->whereDate('main_schedules.end_date', '>=', $startOfMonth);
+            })
+            ->select('weekly_schedules.*'); // Select weekly_schedules columns to avoid ambiguity
+
+        if ($currentRoom !== 'All') {
+            $weeklySchedulesQuery->where('weekly_schedules.room_id', $currentRoom);
+        }
+
+        $weeklySchedules = $weeklySchedulesQuery->get()->groupBy('day');
 
         // Get all reservations for the current teacher within the selected month and year
         // Only fetch if the user is a Non-ICT teacher, as per your ReservationController logic
         $reservations = collect();
         if ($user && $user->user_type == 2 && $user->teacher_type == 'Non-ICT') {
-            $reservations = Reservation::with(['room'])
+            $reservationQuery = Reservation::with(['room'])
                 ->where('teacher_name', $user->first_name . ' ' . $user->last_name) // Assuming teacher_name is stored as full name
                 ->whereMonth('date', $currentMonth)
-                ->whereYear('date', $currentYear)
-                ->get()
-                ->groupBy('date'); // <--- CHANGE IS HERE: Group by the full date
-        }
+                ->whereYear('date', $currentYear);
 
+            if ($currentRoom !== 'All') {
+                $reservationQuery->where('room_id', $currentRoom);
+            }
+
+            $reservations = $reservationQuery->get()->groupBy('date'); // <--- CHANGE IS HERE: Group by the full date
+        }
 
         // Prepare weeks of the month
         $weeks = [];
-        $startOfMonth = Carbon::create($currentYear, $currentMonth, 1)->startOfMonth();
-        $endOfMonth = Carbon::create($currentYear, $currentMonth, 1)->endOfMonth();
+
 
         // Start from Sunday of the week containing the 1st of the month
         $currentWeek = $startOfMonth->copy()->startOfWeek(Carbon::SUNDAY);
@@ -442,7 +460,6 @@ class ScheduleController extends Controller
             $week['end'] = $currentWeek->copy()->endOfWeek(Carbon::SATURDAY);
 
             // Prepare days for this week (Sunday to Saturday)
-            $week['days'] = [];
             for ($i = 0; $i < 7; $i++) {
                 $dayDate = $currentWeek->copy()->addDays($i);
                 $dayName = strtolower($dayDate->format('l'));
@@ -461,6 +478,10 @@ class ScheduleController extends Controller
         }
         $currentTime = $now->format('h:i A');
 
+        // Get all rooms for the filter dropdown
+        $rooms = Room::all();
+
+
         return view('teacher.schedule.calendar', compact(
             'user',
             'weeklySchedules',
@@ -470,7 +491,9 @@ class ScheduleController extends Controller
             'currentYear',
             'startOfMonth',
             'endOfMonth',
-            'currentTime'
+            'currentTime',
+            'rooms', // Pass rooms to the view
+            'currentRoom' // Pass selected room to the view
         ));
     }
     public function adminCalendar(Request $request)

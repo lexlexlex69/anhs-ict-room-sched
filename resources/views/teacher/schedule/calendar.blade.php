@@ -16,7 +16,7 @@
     </header>
 
     <div class="flex justify-between items-center my-6">
-        <a href="?month={{ $currentMonth }}&year={{ $currentYear - 1 }}" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+        <a href="?month={{ $currentMonth }}&year={{ $currentYear - 1 }}&room_id={{ $currentRoom }}" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
             ◀ Previous Year
         </a>
 
@@ -36,9 +36,18 @@
                 </option>
                 @endforeach
             </select>
+
+            <select id="room-select" class="p-2 border rounded bg-white">
+                <option value="All" {{ $currentRoom == 'All' ? 'selected' : '' }}>All Rooms</option>
+                @foreach($rooms as $room)
+                <option value="{{ $room->id }}" {{ $room->id == $currentRoom ? 'selected' : '' }}>
+                    {{ $room->room_name }}
+                </option>
+                @endforeach
+            </select>
         </div>
 
-        <a href="?month={{ $currentMonth }}&year={{ $currentYear + 1 }}" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+        <a href="?month={{ $currentMonth }}&year={{ $currentYear + 1 }}&room_id={{ $currentRoom }}" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
             Next Year ▶
         </a>
     </div>
@@ -157,18 +166,18 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Handle month/year selection changes
-        document.getElementById('month-select').addEventListener('change', function() {
-            const month = this.value;
-            const year = document.getElementById('year-select').value;
-            window.location.href = `?month=${month}&year=${year}`;
-        });
-
-        document.getElementById('year-select').addEventListener('change', function() {
-            const year = this.value;
+        function updateCalendar() {
             const month = document.getElementById('month-select').value;
-            window.location.href = `?month=${month}&year=${year}`;
-        });
+            const year = document.getElementById('year-select').value;
+            const room_id = document.getElementById('room-select').value;
+            window.location.href = `?month=${month}&year=${year}&room_id=${room_id}`;
+        }
+
+        // Handle month/year/room selection changes
+        document.getElementById('month-select').addEventListener('change', updateCalendar);
+        document.getElementById('year-select').addEventListener('change', updateCalendar);
+        document.getElementById('room-select').addEventListener('change', updateCalendar);
+
 
         // Auto-update time
         function updateTime() {
