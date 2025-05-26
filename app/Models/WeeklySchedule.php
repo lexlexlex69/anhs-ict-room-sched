@@ -9,7 +9,7 @@ class WeeklySchedule extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['teacher_id', 'room_id', 'day', 'start_time', 'end_time'];
+    protected $fillable = ['teacher_id', 'room_id', 'day', 'start_time', 'end_time', 'main_schedule_id'];
 
     public function teacher()
     {
@@ -19,5 +19,10 @@ class WeeklySchedule extends Model
     public function room()
     {
         return $this->belongsTo(Room::class);
+    }
+
+    public function mainSchedule()
+    {
+        return $this->belongsTo(MainSchedule::class, 'main_schedule_id');
     }
 }

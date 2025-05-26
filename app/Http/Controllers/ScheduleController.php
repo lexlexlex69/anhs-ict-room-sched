@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MainSchedule;
 use App\Models\Room;
 use Illuminate\Http\Request;
 use App\Models\Schedule;
@@ -11,6 +12,7 @@ use App\Models\Reservation;
 use Illuminate\Support\Carbon;
 use App\Models\User;
 use App\Models\WeeklySchedule;
+use Illuminate\Support\Facades\Log;
 
 class ScheduleController extends Controller
 {
@@ -106,6 +108,101 @@ class ScheduleController extends Controller
 
     // In ScheduleController.php
 
+    // NEW METHOD: Display a list of main schedules for the teacher
+    public function mainScheduleList()
+    {
+        $user = Auth::user();
+        $currentTime = now()->format('h:i A');
+
+        $mainSchedules = MainSchedule::where('teacher_id', $user->id)
+            ->orderBy('start_date')
+            ->get();
+
+        return view('teacher.schedule.main', compact('mainSchedules', 'currentTime', 'user'));
+    }
+
+    // NEW METHOD: Store a new main schedule
+    public function storeMainSchedule(Request $request)
+    {
+        // Log::info([$request]);
+        // $request->validate([
+        //     'schedule_name' => 'required|string|max:255',
+        //     'start_month' => 'required|date_format:Y-m-d', // Expects YYYY-MM-01 format from input[type="month"]
+        //     'end_month' => 'required|date_format:Y-m-d|after_or_equal:start_month', // Expects YYYY-MM-01, must be >= start_month
+        // ]);
+
+        MainSchedule::create([
+            'teacher_id' => Auth::id(),
+            'schedule_name' => $request->schedule_name,
+            'start_date' => $request->start_month,
+            'end_date' => Carbon::parse($request->end_month)->endOfMonth()->toDateString(), // Ensure end_date is end of month
+        ]);
+        // Log::info([$result]);
+        // Optional: Notify admin about new main schedule
+        $admin = User::where('user_type', '1')->first();
+        if ($admin) {
+            Notification::create([
+                'user_id' => $admin->id,
+                'message' => "A new main schedule titled '{$request->schedule_name}' has been created by " . Auth::user()->first_name .
+                    " for the period from " . Carbon::parse($request->start_month)->format('F Y') .
+                    " to " . Carbon::parse($request->end_month)->format('F Y') . ".",
+            ]);
+        }
+
+
+        return redirect()->back()->with('success', 'Main schedule created successfully!');
+    }
+
+    // NEW METHOD: Delete a main schedule and its associated weekly schedules
+    public function deleteMainSchedule(MainSchedule $mainSchedule)
+    {
+        // Ensure the current teacher owns this main schedule
+        if ($mainSchedule->teacher_id != Auth::id()) {
+            return redirect()->back()->with('error', 'You can only delete your own main schedules.');
+        }
+
+        $scheduleName = $mainSchedule->schedule_name;
+        $mainSchedule->delete(); // This will also cascade delete associated weekly schedules due to onDelete('cascade') in migration
+
+        // Optional: Notify admin about deleted main schedule
+        $admin = User::where('user_type', '1')->first();
+        if ($admin) {
+            Notification::create([
+                'user_id' => $admin->id,
+                'message' => "A main schedule titled '{$scheduleName}' has been deleted by " . Auth::user()->first_name . ".",
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Main schedule deleted successfully!');
+    }
+
+    // NEW METHOD: Display weekly schedules for a specific main schedule
+    public function weeklyScheduleForMainSchedule(MainSchedule $mainSchedule)
+    {
+        // Ensure the current teacher owns this main schedule
+        if ($mainSchedule->teacher_id != Auth::id()) {
+            return redirect()->back()->with('error', 'You do not have permission to view this schedule.');
+        }
+
+        $user = Auth::user();
+        // Get rooms related to the teacher's subject for the dropdown in the modal
+        $getRoom = Room::where('subject', $user->subject)->get();
+
+        // Fetch weekly schedules specifically for this main schedule
+        $weeklySchedules = WeeklySchedule::with(['room', 'teacher'])
+            ->where('main_schedule_id', $mainSchedule->id)
+            ->orderByRaw("FIELD(day, 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')")
+            ->orderBy('start_time')
+            ->get();
+
+        // Define days of the week for displaying the grid
+        $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']; // Include weekend days if you allow them
+
+        $currentTime = now()->format('h:i A');
+
+        return view('teacher.schedule.weekly', compact('mainSchedule', 'getRoom', 'weeklySchedules', 'days', 'currentTime'));
+    }
+
     public function weeklyScheduleList()
     {
         $user = Auth::user();
@@ -125,17 +222,19 @@ class ScheduleController extends Controller
         return view('teacher.schedule.weekly', compact('getRoom', 'weeklySchedules', 'days', 'currentTime'));
     }
 
-    public function storeWeeklySchedule(Request $request)
+    // MODIFIED METHOD: Store a new weekly schedule, now requiring a MainSchedule context
+    public function storeWeeklySchedule(Request $request, MainSchedule $mainSchedule)
     {
         $request->validate([
-            'day' => 'required|in:monday,tuesday,wednesday,thursday,friday',
-            'start_time' => 'required',
-            'end_time' => 'required',
+            'day' => 'required|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday', // Ensure all allowed days are listed
+            'start_time' => 'required|date_format:H:i:s',
+            'end_time' => 'required|date_format:H:i:s|after:start_time',
             'room_id' => 'required|exists:rooms,id',
         ]);
 
-        // Check for conflicts
-        $conflict = WeeklySchedule::where('room_id', $request->room_id)
+        // Check for conflicts within the context of this specific main schedule, room, and day
+        $conflict = WeeklySchedule::where('main_schedule_id', $mainSchedule->id)
+            ->where('room_id', $request->room_id)
             ->where('day', $request->day)
             ->where(function ($query) use ($request) {
                 $query->where(function ($q) use ($request) {
@@ -146,49 +245,55 @@ class ScheduleController extends Controller
             })->exists();
 
         if ($conflict) {
-            return back()->with('error', 'There is a schedule conflict for this room and time slot.');
+            return back()->with('error', 'There is a schedule conflict for this room, day, and time slot within this main schedule.');
         }
 
         WeeklySchedule::create([
             'teacher_id' => Auth::id(),
+            'main_schedule_id' => $mainSchedule->id, // Associate with the main schedule
             'room_id' => $request->room_id,
             'day' => $request->day,
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
         ]);
 
-        $admin = User::where('user_type', '1')->first(); // Assuming '1' is the admin user type
-
-        Notification::create([
-            'user_id' => $admin->id,
-            'message' => "A new weekly schedule has been created by " . Auth::user()->first_name .
-                " for {$request->day} from {$request->start_time} to {$request->end_time}.",
-        ]);
-
+        $admin = User::where('user_type', '1')->first();
+        if ($admin) {
+            Notification::create([
+                'user_id' => $admin->id,
+                'message' => "A new weekly schedule has been created by " . Auth::user()->first_name .
+                    " for '{$mainSchedule->schedule_name}' on {$request->day} from {$request->start_time} to {$request->end_time}.",
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Weekly schedule created successfully!');
     }
 
-    public function deleteWeeklySchedule($id)
+    // MODIFIED METHOD: Delete a weekly schedule, now requiring MainSchedule and WeeklySchedule context
+    public function deleteWeeklySchedule(MainSchedule $mainSchedule, WeeklySchedule $weeklySchedule)
     {
-        $schedule = WeeklySchedule::findOrFail($id);
-
-        // Optional: Check if the schedule belongs to the current teacher
-        if ($schedule->teacher_id != Auth::id()) {
-            return redirect()->back()->with('error', 'You can only delete your own schedules.');
+        // Ensure the weekly schedule belongs to the current teacher AND the specified main schedule
+        if ($weeklySchedule->teacher_id != Auth::id() || $weeklySchedule->main_schedule_id != $mainSchedule->id) {
+            return redirect()->back()->with('error', 'You can only delete your own schedules or schedules within the correct main schedule context.');
         }
 
-        $schedule->delete();
+        $day = $weeklySchedule->day;
+        $startTime = $weeklySchedule->start_time;
+        $endTime = $weeklySchedule->end_time;
+        $mainScheduleName = $mainSchedule->schedule_name;
 
-        $admin = User::where('user_type', '1')->first(); // Assuming '1' is the admin user type
+        $weeklySchedule->delete();
 
-        Notification::create([
-            'user_id' => $admin->id,
-            'message' => "A weekly schedule has been deleted by " . Auth::user()->first_name .
-                " for {$schedule->day} from {$schedule->start_time} to {$schedule->end_time}.",
-        ]);
+        $admin = User::where('user_type', '1')->first();
+        if ($admin) {
+            Notification::create([
+                'user_id' => $admin->id,
+                'message' => "A weekly schedule has been deleted by " . Auth::user()->first_name .
+                    " for '{$mainScheduleName}' on {$day} from {$startTime} to {$endTime}.",
+            ]);
+        }
 
-        return redirect()->back()->with('success', 'Schedule deleted successfully!');
+        return redirect()->back()->with('success', 'Weekly schedule deleted successfully!');
     }
 
     public function viewTeacherSchedule($id)

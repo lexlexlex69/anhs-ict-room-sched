@@ -210,9 +210,9 @@
                 </li>
                 @if(Auth::user()->teacher_type == 'ICT')
                 <li>
-                    <a href="{{ url('teacher/schedule/weekly') }}" class="flex items-center p-3 rounded-lg 
-                            {{ Request::is('teacher/schedule/weekly') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">
-                        <i class="fa-solid fa-calendar-week text-lg mr-3"></i> Weekly Schedule
+                    <a href="{{ url('teacher/schedules') }}" class="flex items-center p-3 rounded-lg 
+                            {{ Request::is('teacher/schedules') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">
+                        <i class="fa-solid fa-calendar-week text-lg mr-3"></i> Comlab Schedule
                     </a>
                 </li>
                 @endif

@@ -55,6 +55,7 @@ Route::group(['middleware' => 'admin'], function () {
   Route::get('admin/teacher/schedule/{id}', [ScheduleController::class, 'viewTeacherSchedule'])->name('admin.teacher.schedule');
 
   //Admin view all schedule 
+  Route::get('admin/calendar/schedule', [ScheduleController::class, 'adminScheduleCalendar'])->name('admin.calendar.schedule');
   Route::get('admin/schedule/all', [ScheduleController::class, 'allSchedules'])->name('admin.schedule.all');
   Route::get('admin/schedule/calendar', [ScheduleController::class, 'adminCalendar'])->name('admin.schedule.calendar');
   Route::get('admin/calendar/day-details', [ScheduleController::class, 'dayDetails'])->name('admin.calendar.day-details');
@@ -73,14 +74,22 @@ Route::group(['middleware' => 'teacher'], function () {
   Route::get('teacher/account', [UserController::class, 'MyAccount']);
   Route::post('teacher/account', [UserController::class, 'UpdateMyAccount']);
 
-
-  // Teacher weekly schedule routes
   Route::get('teacher/schedule/weekly', [ScheduleController::class, 'weeklyScheduleList'])->name('teacher.schedule.weekly');
   Route::post('teacher/schedule/weekly', [ScheduleController::class, 'storeWeeklySchedule'])->name('teacher.schedule.weekly.store');
   Route::delete('teacher/schedule/weekly/delete/{id}', [ScheduleController::class, 'deleteWeeklySchedule'])->name('teacher.schedule.weekly.delete');
+  // Teacher Main Schedule Routes (NEW)
+  Route::get('teacher/schedules', [ScheduleController::class, 'mainScheduleList'])->name('teacher.schedules.main');
+  Route::post('teacher/schedules', [ScheduleController::class, 'storeMainSchedule'])->name('teacher.schedules.main.store');
+  Route::delete('teacher/schedules/{mainSchedule}', [ScheduleController::class, 'deleteMainSchedule'])->name('teacher.schedules.main.delete');
+
+  // The {mainSchedule} parameter will be automatically resolved by Laravel's Route Model Binding
+  Route::get('teacher/schedules/{mainSchedule}/weekly', [ScheduleController::class, 'weeklyScheduleForMainSchedule'])->name('teacher.schedules.weekly.show');
+  Route::post('teacher/schedules/{mainSchedule}/weekly', [ScheduleController::class, 'storeWeeklySchedule'])->name('teacher.schedules.weekly.store');
+  Route::delete('teacher/schedules/{mainSchedule}/weekly/{weeklySchedule}', [ScheduleController::class, 'deleteWeeklySchedule'])->name('teacher.schedules.weekly.delete');
 
   Route::get('teacher/schedule/today', [ScheduleController::class, 'todaySchedule'])
     ->name('teacher.schedule.today');
+
 
   Route::get('teacher/schedule/calendar', [ScheduleController::class, 'teacherScheduleCalendar'])->name('teacher.schedule.calendar');
 
