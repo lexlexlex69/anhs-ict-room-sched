@@ -334,56 +334,98 @@ class ScheduleController extends Controller
         return view('admin.schedule.all', compact('weeklySchedules', 'days', 'rooms', 'teachers'));
     }
 
+    protected function getEntryStatus(Carbon $startDateTime, Carbon $endDateTime, Carbon $now)
+    {
+        if ($now->lessThan($startDateTime)) {
+            return ['upcoming', 'bg-blue-100 text-blue-800']; // Blue for Upcoming
+        } elseif ($now->greaterThanOrEqualTo($startDateTime) && $now->lessThan($endDateTime)) {
+            return ['ongoing', 'bg-green-100 text-green-800']; // Green for Ongoing
+        } else { // $now->greaterThanOrEqualTo($endDateTime)
+            return ['completed', 'bg-gray-100 text-gray-800']; // Gray for Completed
+        }
+    }
+
     public function todaySchedule()
     {
         $user = Auth::user();
         $today = now(); // Use Carbon instance for today's date
         $now = now(); // Current time for status calculation
 
-        // Get today's fixed weekly schedules that are active within their main schedule dates
-        $dayOfWeek = strtolower($today->englishDayOfWeek); // Use $today Carbon instance
-        $weeklySchedules = WeeklySchedule::with('room')
-            ->join('main_schedules', 'weekly_schedules.main_schedule_id', '=', 'main_schedules.id')
-            ->where('weekly_schedules.teacher_id', $user->id)
-            ->where('weekly_schedules.day', $dayOfWeek)
-            // Ensure the main schedule is active on today's date
-            ->whereDate('main_schedules.start_date', '<=', $today->format('Y-m-d'))
-            ->whereDate('main_schedules.end_date', '>=', $today->format('Y-m-d'))
-            ->orderBy('weekly_schedules.start_time')
-            ->select('weekly_schedules.*') // Select weekly_schedules columns to avoid ambiguity
-            ->get();
-
-        // Get today's one-time schedules (this logic seems correct for single-day filtering)
-        $oneTimeSchedules = Schedule::with('room')
-            ->where('teacher_id', $user->id)
-            ->whereDate('date', $today->format('Y-m-d')) // Ensure it's exactly today's date
-            ->orderBy('start_time')
-            ->get();
-
-        // Combine and process all schedules
-        $allSchedules = $weeklySchedules->merge($oneTimeSchedules)
-            ->map(function ($schedule) use ($now) {
-                // You would need to ensure `addScheduleStatus` method exists and works as expected.
-                // Assuming it's a private helper method in your controller.
-                return $this->addScheduleStatus($schedule, $now);
-            })
-            ->sortBy('start_time');
-
-        // Count schedules by status
+        $schedulesToDisplay = collect();
         $statusCounts = [
-            'pending' => $allSchedules->where('status', 'pending')->count(),
-            'ongoing' => $allSchedules->where('status', 'ongoing')->count(),
-            'completed' => $allSchedules->where('status', 'completed')->count(),
-            'total' => $allSchedules->count()
+            'total' => 0,
+            'upcoming' => 0,
+            'ongoing' => 0,
+            'completed' => 0,
         ];
+        $isNonIctTeacher = ($user && $user->user_type == 2 && $user->teacher_type == 'Non-ICT');
+
+        if ($user) {
+            if ($user->user_type == 2 && $user->teacher_type == 'ICT') {
+                // Get today's fixed weekly schedules
+                $dayOfWeek = strtolower($today->englishDayOfWeek);
+                $weeklySchedules = WeeklySchedule::with('room')
+                    ->join('main_schedules', 'weekly_schedules.main_schedule_id', '=', 'main_schedules.id')
+                    ->where('weekly_schedules.teacher_id', $user->id)
+                    ->where('weekly_schedules.day', $dayOfWeek)
+                    ->whereDate('main_schedules.start_date', '<=', $today->format('Y-m-d'))
+                    ->whereDate('main_schedules.end_date', '>=', $today->format('Y-m-d'))
+                    ->select('weekly_schedules.*')
+                    ->get();
+
+                // Get today's one-time schedules
+                $oneTimeSchedules = Schedule::with('room')
+                    ->where('teacher_id', $user->id)
+                    ->whereDate('date', $today->format('Y-m-d'))
+                    ->get();
+
+                // Combine and process schedules for ICT teacher
+                $schedulesToDisplay = $weeklySchedules->merge($oneTimeSchedules)
+                    ->map(function ($schedule) use ($today, $now) {
+                        $startDateTime = Carbon::parse($today->format('Y-m-d') . ' ' . $schedule->start_time);
+                        $endDateTime = Carbon::parse($today->format('Y-m-d') . ' ' . $schedule->end_time);
+
+                        list($status, $badgeClass) = $this->getEntryStatus($startDateTime, $endDateTime, $now);
+                        $schedule->status_indicator = $status;
+                        $schedule->status_badge = $badgeClass;
+                        return $schedule;
+                    })
+                    ->sortBy('start_time');
+            } elseif ($user->user_type == 2 && $user->teacher_type == 'Non-ICT') {
+                // Fetch today's approved reservations for Non-ICT teachers
+                $teacherFullName = $user->first_name . ' ' . $user->last_name;
+                $schedulesToDisplay = Reservation::where('teacher_name', $teacherFullName)
+                    ->whereDate('date', $today)
+                    ->where('status', 'approved') // Only show approved reservations for status calculation
+                    ->with('room')
+                    ->get()
+                    ->map(function ($reservation) use ($now) {
+                        $startDateTime = Carbon::parse($reservation->date . ' ' . $reservation->start_time);
+                        $endDateTime = Carbon::parse($reservation->date . ' ' . $reservation->end_time);
+
+                        list($status, $badgeClass) = $this->getEntryStatus($startDateTime, $endDateTime, $now);
+                        $reservation->status_indicator = $status;
+                        $reservation->status_badge = $badgeClass;
+                        return $reservation;
+                    })
+                    ->sortBy('start_time');
+            }
+        }
+
+        // Calculate status counts based on the determined schedulesToDisplay
+        $statusCounts['total'] = $schedulesToDisplay->count();
+        $statusCounts['upcoming'] = $schedulesToDisplay->where('status_indicator', 'upcoming')->count();
+        $statusCounts['ongoing'] = $schedulesToDisplay->where('status_indicator', 'ongoing')->count();
+        $statusCounts['completed'] = $schedulesToDisplay->where('status_indicator', 'completed')->count();
+
 
         return view('teacher.schedule.today', [
-            'schedules' => $allSchedules,
+            'schedules' => $schedulesToDisplay,
             'currentTime' => $now->format('h:i A'),
-            'statusCounts' => $statusCounts
+            'statusCounts' => $statusCounts,
+            'isNonIctTeacher' => $isNonIctTeacher,
         ]);
     }
-
     private function addScheduleStatus($schedule, $now)
     {
         $start = Carbon::parse($schedule->date . ' ' . $schedule->start_time);
