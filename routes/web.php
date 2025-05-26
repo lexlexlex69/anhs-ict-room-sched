@@ -90,6 +90,11 @@ Route::group(['middleware' => 'teacher'], function () {
   Route::get('teacher/schedule/today', [ScheduleController::class, 'todaySchedule'])
     ->name('teacher.schedule.today');
 
+  Route::get('teacher/reservations', [ReservationController::class, 'teacherReservationsIndex'])
+    ->name('teacher.reservations.index');
+  Route::post('teacher/reservations/{id}/cancel', [ReservationController::class, 'teacherCancelReservation'])
+    ->name('teacher.reservations.cancel'); // NEW ROUTE FOR TEACHER CANCELLATION
+
 
   Route::get('teacher/schedule/calendar', [ScheduleController::class, 'teacherScheduleCalendar'])->name('teacher.schedule.calendar');
 

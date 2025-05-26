@@ -12,6 +12,97 @@ use Illuminate\Support\Facades\Auth;
 
 class ReservationController extends Controller
 {
+    public function teacherReservationsIndex(Request $request)
+    {
+        $user = Auth::user();
+
+        // Ensure only Non-ICT teachers can access this page
+        if (!($user && $user->user_type == 2 && $user->teacher_type == 'Non-ICT')) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        // Get filter parameters from the request
+        $statusFilter = $request->input('status', 'all'); // 'all', 'approved', 'cancelled'
+        $selectedMonth = $request->input('month', now()->month);
+        $selectedYear = $request->input('year', now()->year);
+
+        $reservationsQuery = Reservation::with('room')
+            ->where('teacher_name', $user->first_name . ' ' . $user->last_name); // Filter by authenticated teacher's name
+
+        // Apply status filter
+        if ($statusFilter !== 'all') {
+            $reservationsQuery->where('status', $statusFilter);
+        }
+
+        // Apply month and year filters
+        $reservationsQuery->whereMonth('date', $selectedMonth)
+            ->whereYear('date', $selectedYear);
+
+        $reservations = $reservationsQuery->orderBy('date', 'desc')
+            ->orderBy('start_time', 'asc')
+            ->paginate(10); // Or any pagination limit you prefer
+
+        // Prepare data for month and year dropdowns
+        $months = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $months[$i] = Carbon::create(null, $i, 1)->format('F');
+        }
+
+        $years = range(Carbon::now()->year - 5, Carbon::now()->year + 5); // Example: 5 years before and after current year
+
+        return view('teacher.reservations.index', compact(
+            'reservations',
+            'statusFilter',
+            'selectedMonth',
+            'selectedYear',
+            'months',
+            'years'
+        ));
+    }
+
+    public function teacherCancelReservation(Request $request, $id)
+    {
+        $user = Auth::user();
+
+        // Only allow Non-ICT teachers to access this
+        if (!($user && $user->user_type == 2 && $user->teacher_type == 'Non-ICT')) {
+            return back()->with('error', 'Unauthorized action.');
+        }
+
+        $reservation = Reservation::find($id);
+
+        if (!$reservation) {
+            return back()->with('error', 'Reservation not found.');
+        }
+
+        // Verify the reservation belongs to the authenticated teacher
+        // if ($reservation->teacher_name !== ($user->first_name . ' ' . $user->last_name)) {
+        //     return back()->with('error', 'You are not authorized to cancel this reservation.');
+        // }
+
+        // Check if the reservation is already cancelled or completed
+        if ($reservation->status === 'cancelled') {
+            return back()->with('error', 'This reservation is already cancelled.');
+        }
+        if ($reservation->status === 'completed') {
+            return back()->with('error', 'This reservation has already been completed and cannot be cancelled.');
+        }
+
+        // Combine reservation date and time for comparison
+        $reservationDateTime = Carbon::parse($reservation->date . ' ' . $reservation->start_time);
+
+        // Check if the current time is less than the reservation start time
+        if (Carbon::now()->greaterThanOrEqualTo($reservationDateTime)) {
+            return back()->with('error', 'Cannot cancel a reservation that has already started or passed.');
+        }
+
+        // Proceed with cancellation
+        $reservation->status = 'cancelled';
+        $reservation->remarks = 'Cancelled by teacher: ' . ($user->first_name . ' ' . $user->last_name);
+        $reservation->save();
+
+        return back()->with('success', 'Reservation ' . $reservation->reference_number . ' has been cancelled successfully.');
+    }
     public function checkAvailability(Request $request)
     {
         $request->validate([

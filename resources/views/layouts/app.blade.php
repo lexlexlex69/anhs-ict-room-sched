@@ -218,9 +218,15 @@
                 @endif
                 @if(Auth::user()->teacher_type == 'Non-ICT')
                 <li>
+                    <a href="{{ route('teacher.reservations.index') }}" class="flex items-center p-3 rounded-lg 
+                            {{ Request::is('teacher/reservations') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">
+                        <i class="fa-solid fa-calendar-plus text-lg mr-3"></i> Schedules
+                    </a>
+                </li>
+                <li>
                     <a href="{{ route('teacher.reservations.create') }}" class="flex items-center p-3 rounded-lg 
                             {{ Request::is('teacher/reservations/create') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">
-                        <i class="fa-solid fa-calendar-plus text-lg mr-3"></i> Reserve Room
+                        <i class="fa-solid fa-house-medical text-lg mr-3"></i> Avail Room
                     </a>
                 </li>
                 @endif
