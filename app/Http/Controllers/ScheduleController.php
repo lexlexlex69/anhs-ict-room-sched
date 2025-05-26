@@ -337,27 +337,34 @@ class ScheduleController extends Controller
     public function todaySchedule()
     {
         $user = Auth::user();
-        $today = now()->format('Y-m-d');
-        $now = now();
+        $today = now(); // Use Carbon instance for today's date
+        $now = now(); // Current time for status calculation
 
-        // Get today's fixed weekly schedules
-        $dayOfWeek = strtolower($now->englishDayOfWeek);
+        // Get today's fixed weekly schedules that are active within their main schedule dates
+        $dayOfWeek = strtolower($today->englishDayOfWeek); // Use $today Carbon instance
         $weeklySchedules = WeeklySchedule::with('room')
-            ->where('teacher_id', $user->id)
-            ->where('day', $dayOfWeek)
-            ->orderBy('start_time')
+            ->join('main_schedules', 'weekly_schedules.main_schedule_id', '=', 'main_schedules.id')
+            ->where('weekly_schedules.teacher_id', $user->id)
+            ->where('weekly_schedules.day', $dayOfWeek)
+            // Ensure the main schedule is active on today's date
+            ->whereDate('main_schedules.start_date', '<=', $today->format('Y-m-d'))
+            ->whereDate('main_schedules.end_date', '>=', $today->format('Y-m-d'))
+            ->orderBy('weekly_schedules.start_time')
+            ->select('weekly_schedules.*') // Select weekly_schedules columns to avoid ambiguity
             ->get();
 
-        // Get today's one-time schedules
+        // Get today's one-time schedules (this logic seems correct for single-day filtering)
         $oneTimeSchedules = Schedule::with('room')
             ->where('teacher_id', $user->id)
-            ->where('date', $today)
+            ->whereDate('date', $today->format('Y-m-d')) // Ensure it's exactly today's date
             ->orderBy('start_time')
             ->get();
 
         // Combine and process all schedules
         $allSchedules = $weeklySchedules->merge($oneTimeSchedules)
             ->map(function ($schedule) use ($now) {
+                // You would need to ensure `addScheduleStatus` method exists and works as expected.
+                // Assuming it's a private helper method in your controller.
                 return $this->addScheduleStatus($schedule, $now);
             })
             ->sortBy('start_time');

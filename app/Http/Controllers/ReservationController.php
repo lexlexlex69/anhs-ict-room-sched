@@ -74,8 +74,8 @@ class ReservationController extends Controller
             ], 403); // Forbidden
         }
 
-        // Determine status: Non-ICT teacher reservations are always 'pending'
-        $status = 'pending';
+        // Determine status: Non-ICT teacher reservations are always 'approved'
+        $status = 'approved';
 
         $reservation = Reservation::create([
             'reference_number' => Reservation::generateReferenceNumber(),
