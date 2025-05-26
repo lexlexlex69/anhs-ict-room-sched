@@ -59,8 +59,17 @@
                 </div>
 
                 <div>
-                    <label class="text-sm font-bold text-gray-700">Subject</label>
-                    <input type="text" name="subject" class="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700" placeholder="Enter Subject (e.g., Math, Science, English)" required>
+                    <label class="text-sm font-bold text-gray-700">Teacher Type</label>
+                    <select name="teacher_type" id="teacher_type" class="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700" required>
+                        <option value="">Select Type</option>
+                        <option value="ICT">ICT</option>
+                        <option value="Non-ICT">Non-ICT</option>
+                    </select>
+                </div>
+
+                <div id="subject_field">
+                    <label class="text-sm font-bold text-gray-700">Subject (Optional)</label>
+                    <input type="text" name="subject" class="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700" placeholder="Enter Subject (e.g., Math, Science, English)">
                 </div>
 
                 <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
@@ -70,4 +79,33 @@
         </div>
     </section>
 </main>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const teacherTypeSelect = document.getElementById('teacher_type');
+        const subjectField = document.getElementById('subject_field');
+        const subjectInput = subjectField.querySelector('input[name="subject"]');
+
+        // The subject field is now always visible and optional.
+        // No need to toggle visibility or required attribute based on teacher type.
+        // The label text is updated to reflect it's optional for all.
+        // The following lines are removed as they are no longer needed:
+        /*
+        function toggleSubjectField() {
+            if (teacherTypeSelect.value === 'ICT') {
+                subjectField.classList.remove('hidden');
+                subjectInput.setAttribute('required', 'required');
+            } else {
+                subjectField.classList.add('hidden');
+                subjectInput.removeAttribute('required');
+                subjectInput.value = ''; // Clear subject if non-ICT
+            }
+        }
+
+        teacherTypeSelect.addEventListener('change', toggleSubjectField);
+
+        // Initial call to set visibility based on default value
+        toggleSubjectField();
+        */
+    });
+</script>
 @endsection

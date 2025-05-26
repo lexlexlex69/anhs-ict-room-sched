@@ -295,6 +295,7 @@ class ScheduleController extends Controller
     {
         $user = Auth::user();
         $now = now();
+
         // Get current month and year or use requested values
         $currentMonth = $request->input('month', date('m'));
         $currentYear = $request->input('year', date('Y'));
@@ -308,6 +309,19 @@ class ScheduleController extends Controller
             ->where('teacher_id', $user->id)
             ->get()
             ->groupBy('day');
+
+        // Get all reservations for the current teacher within the selected month and year
+        // Only fetch if the user is a Non-ICT teacher, as per your ReservationController logic
+        $reservations = collect();
+        if ($user && $user->user_type == 2 && $user->teacher_type == 'Non-ICT') {
+            $reservations = Reservation::with(['room'])
+                ->where('teacher_name', $user->first_name . ' ' . $user->last_name) // Assuming teacher_name is stored as full name
+                ->whereMonth('date', $currentMonth)
+                ->whereYear('date', $currentYear)
+                ->get()
+                ->groupBy('date'); // <--- CHANGE IS HERE: Group by the full date
+        }
+
 
         // Prepare weeks of the month
         $weeks = [];
@@ -345,6 +359,7 @@ class ScheduleController extends Controller
         return view('teacher.schedule.calendar', compact(
             'user',
             'weeklySchedules',
+            'reservations',
             'weeks',
             'currentMonth',
             'currentYear',

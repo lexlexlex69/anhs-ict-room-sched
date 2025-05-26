@@ -18,7 +18,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
 
-    protected $table ="users";
+    protected $table = "users";
 
     protected $fillable = [
         'first_name',
@@ -28,6 +28,7 @@ class User extends Authenticatable
         'email',
         'password',
         'usertype',
+        'teacher_type',
     ];
 
     /**
@@ -52,50 +53,41 @@ class User extends Authenticatable
 
     static public function getSingle($id)
     {
-        return self::find($id);  
-    
+        return self::find($id);
     }
 
 
     static public function getSeller()
-{
-    $return = self::select('users.*')
-        ->where('users.user_type', '=', 2)
-        ->where('users.is_delete', '=', 0)
-        ->orderBy('users.id', 'desc')
-        ->paginate(10);
-
-    return $return;
-}
-
-
-public function getProfilePictureUrl()
-{
-    if(!empty($this->profile_pic) && file_exists('upload/profile/'.$this->profile_pic))
     {
-        return url('upload/profile/'.$this->profile_pic);
-    }
-    else
-    {
-        return "";
-    
+        $return = self::select('users.*')
+            ->where('users.user_type', '=', 2)
+            ->where('users.is_delete', '=', 0)
+            ->orderBy('users.id', 'desc')
+            ->paginate(10);
+
+        return $return;
     }
 
-}
+
+    public function getProfilePictureUrl()
+    {
+        if (!empty($this->profile_pic) && file_exists('upload/profile/' . $this->profile_pic)) {
+            return url('upload/profile/' . $this->profile_pic);
+        } else {
+            return "";
+        }
+    }
 
 
 
-static public function getTeacher()
-{
-    $return = self::select('users.*')
-        ->where('users.user_type', '=', 2)
-        ->where('users.is_delete', '=', 0)
-        ->orderBy('users.id', 'desc')
-        ->paginate(10);
+    static public function getTeacher()
+    {
+        $return = self::select('users.*')
+            ->where('users.user_type', '=', 2)
+            ->where('users.is_delete', '=', 0)
+            ->orderBy('users.id', 'desc')
+            ->paginate(10);
 
-    return $return;
-}
-
-
-
+        return $return;
+    }
 }

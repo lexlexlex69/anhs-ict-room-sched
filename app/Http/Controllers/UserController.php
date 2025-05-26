@@ -10,33 +10,28 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    
+
     public function MyAccount()
     {
         $data['getRecord'] = User::getSingle(Auth::user()->id);
         $data['header_title'] = "My Account";
-        if(Auth::user()->user_type == 1)
-        {
-            return view('admin.my_account',$data);
-        }
-        else if(Auth::user()->user_type == 2)
-        {
-          
-            return view('teacher.my_account',$data);
-        }
-        else if(Auth::user()->user_type == 3)
-        {
-            
-            return view('dealer.my_account',$data);
+        if (Auth::user()->user_type == 1) {
+            return view('admin.my_account', $data);
+        } else if (Auth::user()->user_type == 2) {
+
+            return view('teacher.my_account', $data);
+        } else if (Auth::user()->user_type == 3) {
+
+            return view('dealer.my_account', $data);
         }
     }
 
     public function UpdateMyAccount(Request $request)
     {
         $id = Auth::user()->id;
-        
+
         request()->validate([
-            'email' => 'required|email|unique:users,email,'.$id
+            'email' => 'required|email|unique:users,email,' . $id
         ]);
 
         $user = User::getSingle($id);
@@ -44,16 +39,14 @@ class UserController extends Controller
         $user->last_name = trim($request->last_name);
         $user->phone_number = '+63' . trim($request->phone_number);
         $user->subject = trim($request->subject);
-        if(!empty($request->file('profile_pic')))
-        {
-            if(!empty($student->getProfile))
-            {
-                unlink('upload/profile/'.$user->profile_pic);
+        if (!empty($request->file('profile_pic'))) {
+            if (!empty($student->getProfile)) {
+                unlink('upload/profile/' . $user->profile_pic);
             }
             $ext = $request->file('profile_pic')->getClientOriginalExtension();
             $file = $request->file('profile_pic');
-            $randomStr = date('Ymdhis').Str::random(30);
-            $filename = strtolower($randomStr).'.'.$ext;
+            $randomStr = date('Ymdhis') . Str::random(30);
+            $filename = strtolower($randomStr) . '.' . $ext;
             $file->move(public_path('upload/profile/'), $filename);
 
             $user->profile_pic = $filename;
@@ -61,11 +54,10 @@ class UserController extends Controller
 
         $user->status = is_numeric($request->status) ? (int) $request->status : 0;
         $user->email = trim($request->email);
-        
+
         $user->save();
 
-        return redirect()->back()->with('success',"Account successfully Updated");
-    
+        return redirect()->back()->with('success', "Account successfully Updated");
     }
 
 
@@ -77,7 +69,7 @@ class UserController extends Controller
         $data['getRecord'] = User::GetTeacher(); // Fetch records from the database
         return view('admin.teacher.list', $data);
     }
-    
+
 
     public function add()
     {
@@ -88,74 +80,70 @@ class UserController extends Controller
 
     public function insert(Request $request)
     {
-
-        $validatedData = $request->validate([
+        $request->validate([
             'first_name' => 'required|string|max:255',
-            'email' => 'required|string|max:255|unique:users',
-            'password' => 'required|string|min:3',
-    
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:6',
+            'teacher_type' => 'required|in:ICT,Non-ICT', // Validate teacher_type
+            'subject' => 'nullable|string|max:255', // Subject can be nullable
         ]);
-    
-        $user = new User();
-        $user->first_name = $validatedData['first_name'];
-        $user->email = $validatedData['email'];
-        $user->password = Hash::make($validatedData['password']);
-        $user->subject = trim($request->subject);
-        $user->user_type = 2;
-      
-    
-        $user->save();
-    
-        return redirect('admin/teacher/list')->with('success',"Teacher Added");
-    }
 
+        $user = new User;
+        $user->first_name = trim($request->first_name);
+        $user->email = trim($request->email);
+        $user->password = Hash::make($request->password);
+        $user->user_type = 2; // Set user type to teacher
+        $user->teacher_type = $request->teacher_type; // Save teacher type
+        // Set subject only if teacher_type is ICT, otherwise null it out
+        $user->subject = ($request->teacher_type == 'ICT') ? trim($request->subject) : null;
+        $user->save();
+
+        return redirect('admin/teacher/list')->with('success', 'Teacher Added Successfully');
+    }
 
     public function edit($id)
     {
-        $data['getRecord'] = User::getSingle($id);
-        if(!empty($data['getRecord']))
-        {
-            $data['header_title'] = "Edit Teacher ";
-            return view('admin.teacher.edit',$data);
+        $getRecord = User::getSingle($id);
+        if (!empty($getRecord)) {
+            return view('admin.teacher.edit', compact('getRecord'));
         }
-        else
-        {
-                abort(404);
-        }
-        
+        return redirect('admin/teacher/list')->with('error', 'Teacher Not Found');
     }
 
-
-    public function update($id, Request $request)
+    public function update(Request $request, $id)
     {
-        
-
-        $validatedData = $request->validate([
+        $request->validate([
             'first_name' => 'required|string|max:255',
-            'email' => 'required|string|max:255|unique:users',
-            'password' => 'required|string|min:3',
-    
+            'email' => 'required|email|unique:users,email,' . $id,
+            'password' => 'nullable|min:6', // Password can be nullable for update
+            'teacher_type' => 'required|in:ICT,Non-ICT', // Validate teacher_type
+            'subject' => 'nullable|string|max:255', // Subject can be nullable
         ]);
 
         $user = User::getSingle($id);
-        $user->first_name = $validatedData['first_name'];
-        $user->email = $validatedData['email'];
-        $user->password = Hash::make($validatedData['password']);
-        $user->subject = trim($request->subject);
-        $user->user_type = 2;
-  
+        if (empty($user)) {
+            return redirect('admin/teacher/list')->with('error', 'Teacher Not Found');
+        }
+
+        $user->first_name = trim($request->first_name);
+        $user->email = trim($request->email);
+        if (!empty($request->password)) {
+            $user->password = Hash::make($request->password);
+        }
+        $user->teacher_type = $request->teacher_type; // Update teacher type
+        // Update subject only if teacher_type is ICT, otherwise null it out
+        $user->subject = ($request->teacher_type == 'ICT') ? trim($request->subject) : null;
         $user->save();
-    
-   
-        return redirect('admin/teacher/list')->with('success',"Teacher successfully update");
+
+        return redirect('admin/teacher/list')->with('success', 'Teacher Updated Successfully');
     }
 
 
     public function delete($id)
     {
         $data = User::findOrFail($id);
-        $data->delete(); 
-    
+        $data->delete();
+
         return redirect()->back()->with('success', "Teacher Successfully Deleted");
     }
 }

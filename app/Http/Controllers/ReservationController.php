@@ -61,16 +61,21 @@ class ReservationController extends Controller
             'start_time' => 'required',
             'end_time' => 'required',
             'teacher_name' => 'required|string|max:255',
-            'subject' => 'required|string|max:255'
+            'subject' => 'nullable|string|max:255' // Subject can be nullable
         ]);
 
-        // Determine status based on user type
-        // If an admin (user_type 1) or a guest (no auth) makes a reservation, it's 'approved'.
-        // If a teacher (user_type 2) makes a reservation, it's 'pending' for admin review.
-        $status = 'approved'; // Default for public/admin
-        if (Auth::check() && Auth::user()->user_type == 2) {
-            $status = 'pending'; // For teachers, set to pending
+        $user = Auth::user();
+
+        // Only allow Non-ICT teachers to make reservations
+        if (!($user && $user->user_type == 2 && $user->teacher_type == 'Non-ICT')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only Non-ICT teachers can reserve rooms.'
+            ], 403); // Forbidden
         }
+
+        // Determine status: Non-ICT teacher reservations are always 'pending'
+        $status = 'pending';
 
         $reservation = Reservation::create([
             'reference_number' => Reservation::generateReferenceNumber(),
