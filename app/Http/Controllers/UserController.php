@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
@@ -80,23 +81,30 @@ class UserController extends Controller
 
     public function insert(Request $request)
     {
-        $request->validate([
-            'first_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:6',
-            'teacher_type' => 'required|in:ICT,Non-ICT', // Validate teacher_type
-            'subject' => 'nullable|string|max:255', // Subject can be nullable
-        ]);
+        // $request->validate([
+        //     'first_name' => 'required|string|max:255',
+        //     'last_name' => 'required|string|max:255', // Added validation for last_name
+        //     'email' => 'required|email|unique:users,email',
+        //     'password' => 'required|min:6',
+        //     'teacher_type' => 'required|in:ICT,Non-ICT',
+        //     'subject' => 'nullable|string|max:255',
+        // ]);
+        Log::info([$request]);
+
 
         $user = new User;
         $user->first_name = trim($request->first_name);
+        $user->last_name = trim($request->last_name); // Assign last_name
         $user->email = trim($request->email);
         $user->password = Hash::make($request->password);
         $user->user_type = 2; // Set user type to teacher
-        $user->teacher_type = $request->teacher_type; // Save teacher type
+        $user->teacher_type = $request->teacher_type;
         // Set subject only if teacher_type is ICT, otherwise null it out
-        $user->subject = ($request->teacher_type == 'ICT') ? trim($request->subject) : null;
+        $user->subject = $request->subject;
+        // $user->subject = ($request->teacher_type == 'ICT') ? trim($request->subject) : null;
         $user->save();
+
+        Log::info([$user]);
 
         return redirect('admin/teacher/list')->with('success', 'Teacher Added Successfully');
     }
@@ -104,6 +112,7 @@ class UserController extends Controller
     public function edit($id)
     {
         $getRecord = User::getSingle($id);
+        Log::info([$getRecord]);
         if (!empty($getRecord)) {
             return view('admin.teacher.edit', compact('getRecord'));
         }
@@ -114,10 +123,11 @@ class UserController extends Controller
     {
         $request->validate([
             'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255', // Added validation for last_name
             'email' => 'required|email|unique:users,email,' . $id,
-            'password' => 'nullable|min:6', // Password can be nullable for update
-            'teacher_type' => 'required|in:ICT,Non-ICT', // Validate teacher_type
-            'subject' => 'nullable|string|max:255', // Subject can be nullable
+            'password' => 'nullable|min:6',
+            'teacher_type' => 'required|in:ICT,Non-ICT',
+            'subject' => 'nullable|string|max:255',
         ]);
 
         $user = User::getSingle($id);
@@ -126,18 +136,18 @@ class UserController extends Controller
         }
 
         $user->first_name = trim($request->first_name);
+        $user->last_name = trim($request->last_name); // Assign last_name
         $user->email = trim($request->email);
         if (!empty($request->password)) {
             $user->password = Hash::make($request->password);
         }
-        $user->teacher_type = $request->teacher_type; // Update teacher type
+        $user->teacher_type = $request->teacher_type;
         // Update subject only if teacher_type is ICT, otherwise null it out
         $user->subject = ($request->teacher_type == 'ICT') ? trim($request->subject) : null;
         $user->save();
 
         return redirect('admin/teacher/list')->with('success', 'Teacher Updated Successfully');
     }
-
 
     public function delete($id)
     {

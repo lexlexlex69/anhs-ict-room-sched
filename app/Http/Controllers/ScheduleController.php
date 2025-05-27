@@ -186,7 +186,8 @@ class ScheduleController extends Controller
 
         $user = Auth::user();
         // Get rooms related to the teacher's subject for the dropdown in the modal
-        $getRoom = Room::where('subject', $user->subject)->get();
+        // $getRoom = Room::where('subject', $user->subject)->get();
+        $getRoom = Room::all();
 
         // Fetch weekly schedules specifically for this main schedule
         $weeklySchedules = WeeklySchedule::with(['room', 'teacher'])

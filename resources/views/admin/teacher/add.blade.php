@@ -47,6 +47,10 @@
                     <label class="text-sm font-bold text-gray-700">First Name</label>
                     <input type="text" name="first_name" class="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700" required placeholder="Enter First Name">
                 </div>
+                <div>
+                    <label class="text-sm font-bold text-gray-700">Last Name</label>
+                    <input type="text" name="last_name" class="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700" required placeholder="Enter Last Name">
+                </div>
 
                 <div>
                     <label class="text-sm font-bold text-gray-700">Email</label>
@@ -68,8 +72,8 @@
                 </div>
 
                 <div id="subject_field">
-                    <label class="text-sm font-bold text-gray-700">Subject (Optional)</label>
-                    <input type="text" name="subject" class="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700" placeholder="Enter Subject (e.g., Math, Science, English)">
+                    <label class="text-sm font-bold text-gray-700">Subject</label>
+                    <input type="text" name="subject" class="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700" required placeholder="Enter Subject (e.g., Math, Science, English)">
                 </div>
 
                 <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">

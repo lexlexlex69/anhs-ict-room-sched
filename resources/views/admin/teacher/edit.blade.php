@@ -42,12 +42,17 @@
 
                 <div>
                     <label class="text-sm font-bold text-gray-700">First Name</label>
-                    <input type="text" name="first_name" value="{{ old ('first_name',$getRecord->first_name) }}" class="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700" required placeholder="Enter First Name">
+                    <input type="text" name="first_name" value="{{ old('first_name', $getRecord->first_name) }}" class="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700" required placeholder="Enter First Name">
+                </div>
+
+                <div>
+                    <label class="text-sm font-bold text-gray-700">Last Name</label>
+                    <input type="text" name="last_name" value="{{ old('last_name', $getRecord->last_name) }}" class="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700" required placeholder="Enter Last Name">
                 </div>
 
                 <div>
                     <label class="text-sm font-bold text-gray-700">Email</label>
-                    <input type="email" name="email" value="{{ old ('email',$getRecord->email) }}" class="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700" required placeholder="Enter Email ">
+                    <input type="email" name="email" value="{{ old('email', $getRecord->email) }}" class="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700" required placeholder="Enter Email ">
                 </div>
 
                 <div>
@@ -65,8 +70,8 @@
                 </div>
 
                 <div id="subject_field_edit">
-                    <label class="text-sm font-bold text-gray-700">Subject (Optional)</label>
-                    <input type="text" name="subject" value="{{ old('subject', $getRecord->subject) }}" class="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700" placeholder="Enter Subject (e.g., Math, Science, English)">
+                    <label class="text-sm font-bold text-gray-700">Subject</label>
+                    <input type="text" name="subject" value="{{ old('subject', $getRecord->subject) }}" class="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700" placeholder="Enter Subject (e.g., Math, Science, English)" required>
                 </div>
 
                 <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
@@ -83,26 +88,8 @@
         const subjectInput = subjectField.querySelector('input[name="subject"]');
 
         // The subject field is now always visible and optional.
-        // No need to toggle visibility or required attribute based on teacher type.
-        // The label text is updated to reflect it's optional for all.
-        // The following lines are removed as they are no longer needed:
-        /*
-        function toggleSubjectField() {
-            if (teacherTypeSelect.value === 'ICT') {
-                subjectField.classList.remove('hidden');
-                subjectInput.setAttribute('required', 'required');
-            } else {
-                subjectField.classList.add('hidden');
-                subjectInput.removeAttribute('required');
-                subjectInput.value = ''; // Clear subject if non-ICT
-            }
-        }
-
-        teacherTypeSelect.addEventListener('change', toggleSubjectField);
-
-        // Initial call to set visibility based on current record's value
-        toggleSubjectField();
-        */
+        // The previous commented out JavaScript that toggled visibility/required attribute is no longer needed.
+        // The label text is updated in the HTML to reflect it's optional for all.
     });
 </script>
 @endsection
