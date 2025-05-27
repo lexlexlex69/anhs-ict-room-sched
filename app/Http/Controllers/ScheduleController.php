@@ -296,18 +296,31 @@ class ScheduleController extends Controller
         return redirect()->back()->with('success', 'Weekly schedule deleted successfully!');
     }
 
-    public function viewTeacherSchedule($id)
+    public function viewTeacherSchedule(Request $request, $id)
     {
         $teacher = User::findOrFail($id);
-        $weeklySchedules = WeeklySchedule::with(['room'])
+
+        // Fetch all main schedules for this teacher
+        $mainSchedules = MainSchedule::where('teacher_id', $id)->get();
+
+        // Get the selected main schedule ID from the request, default to 'All' or first if available
+        $selectedMainScheduleId = $request->input('main_schedule_id', 'all');
+
+        $weeklySchedulesQuery = WeeklySchedule::with(['room'])
             ->where('teacher_id', $id)
             ->orderByRaw("FIELD(day, 'monday', 'tuesday', 'wednesday', 'thursday', 'friday')")
-            ->orderBy('start_time')
-            ->get();
+            ->orderBy('start_time');
+
+        // Apply filter if a specific main schedule is selected
+        if ($selectedMainScheduleId !== 'all' && $selectedMainScheduleId !== null) {
+            $weeklySchedulesQuery->where('main_schedule_id', $selectedMainScheduleId);
+        }
+
+        $weeklySchedules = $weeklySchedulesQuery->get();
 
         $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
-        return view('admin.teacher.schedule', compact('teacher', 'weeklySchedules', 'days'));
+        return view('admin.teacher.schedule', compact('teacher', 'weeklySchedules', 'days', 'mainSchedules', 'selectedMainScheduleId'));
     }
 
     public function allSchedules(Request $request)
