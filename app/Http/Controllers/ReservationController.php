@@ -52,11 +52,20 @@ class ReservationController extends Controller
 
         $years = range(Carbon::now()->year - 5, Carbon::now()->year + 5); // Example: 5 years before and after current year
 
+        $now = now();
+        $currentTime = $now->format('h:i A');
+
+        $rooms = Room::all(); // Fetch all rooms
+        // return view('teacher.reservations.create', compact('rooms'));
+
+
+
         return view('teacher.reservations.index', compact(
             'reservations',
             'statusFilter',
             'selectedMonth',
             'selectedYear',
+            'currentTime',
             'months',
             'years'
         ));
@@ -387,7 +396,20 @@ class ReservationController extends Controller
     }
     public function teacherCreate()
     {
+        $now = now();
+        $currentTime = $now->format('h:i A');
+
         $rooms = Room::all(); // Fetch all rooms
-        return view('teacher.reservations.create', compact('rooms'));
+        // return view('teacher.reservations.create', compact('rooms'));
+
+
+        // Get all rooms for the filter dropdown
+        $rooms = Room::all();
+
+
+        return view('teacher.reservations.create', compact(
+            'rooms',
+            'currentTime',
+        ));
     }
 }

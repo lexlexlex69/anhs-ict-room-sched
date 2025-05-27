@@ -4,11 +4,11 @@
 <main class="relative z-10 flex-1 px-8 font-karla font-semibold">
     <header class="flex flex-col sm:flex-row justify-between items-center bg-white text-gray-700 px-4 sm:px-6 py-4 rounded-lg shadow-md space-y-2 sm:space-y-0">
         <div class="flex items-center space-x-4">
-            <i class="fa-solid fa-calendar-alt text-lg"></i>
-            <span class="text-sm font-semibold">My Reservations</span>
+            <i class="fa-solid fa-calendar-day text-lg"></i>
+            <span class="text-sm font-semibold">Today's Date: {{ now()->format('l, F j, Y') }}</span>
         </div>
         <div class="flex items-center space-x-4">
-            <span class="text-sm font-semibold">Current Time: {{ now()->format('h:i A') }}</span>
+            <span class="text-sm font-semibold">Current Time: {{ $currentTime }}</span>
             <span class="text-sm font-semibold">Welcome, {{ Auth::user()->first_name }}!</span>
         </div>
     </header>
