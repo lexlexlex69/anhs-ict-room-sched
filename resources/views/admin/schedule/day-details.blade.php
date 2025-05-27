@@ -8,8 +8,11 @@
             @foreach($schedules as $schedule)
             @php
             $now = now();
-            $start = Carbon::parse($schedule->date)->setTimeFromTimeString($schedule->start_time);
-            $end = Carbon::parse($schedule->date)->setTimeFromTimeString($schedule->end_time);
+            // Ensure $schedule->date is available or construct a full Carbon instance
+            // For weekly schedules, the day is based on the current calendar date passed to dayDetails
+            $scheduleDate = Carbon::parse($date);
+            $start = $scheduleDate->copy()->setTimeFromTimeString($schedule->start_time);
+            $end = $scheduleDate->copy()->setTimeFromTimeString($schedule->end_time);
             $status = $now->gt($end) ? 'done' : ($now->between($start, $end) ? 'ongoing' : 'upcoming');
             $statusColor = [
             'done' => 'bg-green-500',
@@ -23,7 +26,6 @@
             ][$status];
             @endphp
             <div class="p-3 bg-green-50 rounded-lg border border-green-100 relative">
-                <!-- Status Indicator -->
                 <div class="absolute top-2 right-2 flex items-center">
                     <span class="w-2 h-2 rounded-full mr-1 {{ $statusColor }}"></span>
                     <span class="text-xs text-gray-600">{{ $statusText }}</span>
@@ -72,7 +74,6 @@
             ][$status];
             @endphp
             <div class="p-3 bg-blue-50 rounded-lg border border-blue-100 relative">
-                <!-- Status Indicator -->
                 <div class="absolute top-2 right-2 flex items-center">
                     <span class="w-2 h-2 rounded-full mr-1 {{ $statusColor }}"></span>
                     <span class="text-xs text-gray-600">{{ $statusText }}</span>
