@@ -5,14 +5,7 @@
     <header class="flex flex-col sm:flex-row justify-between items-center bg-white text-gray-700 px-4 sm:px-6 py-4 rounded-lg shadow-md space-y-2 sm:space-y-0">
         <div class="flex items-center space-x-4">
             <i class="fa-solid fa-calendar-day text-lg"></i>
-            <span class="text-sm font-semibold">
-                @if($isNonIctTeacher)
-                Today's Reservations
-                @else
-                Today's Schedule
-                @endif
-            </span>
-            <span class="text-sm">{{ now()->format('l, F j, Y') }}</span>
+            <span class="text-sm font-semibold">Today's Date: {{ now()->format('l, F j, Y') }}</span>
         </div>
         <div class="flex items-center space-x-4">
             <span class="text-sm font-semibold">Current Time: {{ $currentTime }}</span>
@@ -20,13 +13,15 @@
         </div>
     </header>
 
+
+
     <section class="mt-6">
         <div class="bg-white bg-opacity-30 backdrop-blur-lg p-6 rounded-lg shadow-lg">
             <h1 class="text-lg font-karla font-semibold text-gray-900 mb-5">
                 @if($isNonIctTeacher)
                 My Today's Approved Room Reservations
                 @else
-                My Today's Fixed/One-Time Schedules
+                My Today's Schedules
                 @endif
             </h1>
 
@@ -47,10 +42,10 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-gray-500 text-sm">Upcoming</p>
-                            <p class="text-2xl font-bold text-blue-600">{{ $statusCounts['upcoming'] }}</p>
+                            <p class="text-2xl font-bold text-yellow-600">{{ $statusCounts['upcoming'] }}</p>
                         </div>
-                        <div class="bg-blue-100 p-3 rounded-full">
-                            <i class="fas fa-clock text-blue-500"></i>
+                        <div class="bg-yellow-100 p-3 rounded-full">
+                            <i class="fas fa-clock text-yellow-500"></i>
                         </div>
                     </div>
                 </div>
@@ -59,10 +54,10 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-gray-500 text-sm">Ongoing</p>
-                            <p class="text-2xl font-bold text-green-600">{{ $statusCounts['ongoing'] }}</p>
+                            <p class="text-2xl font-bold text-blue-600">{{ $statusCounts['ongoing'] }}</p>
                         </div>
-                        <div class="bg-green-100 p-3 rounded-full">
-                            <i class="fas fa-chalkboard-teacher text-green-500"></i>
+                        <div class="bg-blue-100 p-3 rounded-full">
+                            <i class="fas fa-chalkboard-teacher text-blue-500"></i>
                         </div>
                     </div>
                 </div>
@@ -71,10 +66,10 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-gray-500 text-sm">Completed</p>
-                            <p class="text-2xl font-bold text-gray-600">{{ $statusCounts['completed'] }}</p>
+                            <p class="text-2xl font-bold text-green-600">{{ $statusCounts['completed'] }}</p>
                         </div>
-                        <div class="bg-gray-200 p-3 rounded-full">
-                            <i class="fas fa-check-circle text-gray-500"></i>
+                        <div class="bg-green-200 p-3 rounded-full">
+                            <i class="fas fa-check-circle text-green-500"></i>
                         </div>
                     </div>
                 </div>

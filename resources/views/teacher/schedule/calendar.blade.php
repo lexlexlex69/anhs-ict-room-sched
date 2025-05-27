@@ -5,14 +5,14 @@
     <header class="flex flex-col sm:flex-row justify-between items-center bg-white text-gray-700 px-4 sm:px-6 py-4 rounded-lg shadow-md space-y-2 sm:space-y-0">
         <div class="flex items-center space-x-4">
             <i class="fa-solid fa-calendar-day text-lg"></i>
-            <span class="text-sm font-semibold">Today's Schedule</span>
-            <span class="text-sm">{{ now()->format('l, F j, Y') }}</span>
+            <span class="text-sm font-semibold">Today's Date: {{ now()->format('l, F j, Y') }}</span>
         </div>
         <div class="flex items-center space-x-4">
-            <span class="text-sm font-semibold">Current Time: <span id="current-time">{{ $currentTime }}</span></span>
+            <span class="text-sm font-semibold">Current Time: {{ $currentTime }}</span>
             <span class="text-sm font-semibold">Welcome, {{ Auth::user()->first_name }}!</span>
         </div>
     </header>
+
 
     <div class="flex justify-between items-center my-6">
         <a href="?month={{ $currentMonth }}&year={{ $currentYear - 1 }}&room_id={{ $currentRoom }}" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">

@@ -14,6 +14,8 @@ class UserController extends Controller
 
     public function MyAccount()
     {
+        $now = now(); // Current time for status calculation
+
         $data['getRecord'] = User::getSingle(Auth::user()->id);
         $data['header_title'] = "My Account";
         if (Auth::user()->user_type == 1) {

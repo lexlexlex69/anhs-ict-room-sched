@@ -201,7 +201,7 @@
                             <p class="mt-2">Your reference number is:</p>
                             <p class="text-xl font-mono font-bold my-2">${data.reference_number}</p>
                             <p>Status: ${data.status.charAt(0).toUpperCase() + data.status.slice(1)}</p>
-                            <p>Please keep this for your records. The admin will review your request.</p>
+                            <p>Please keep this for your records.</p>
                         `;
                         checkAvailabilityForm.parentNode.insertBefore(successDiv, checkAvailabilityForm.nextSibling);
                         checkAvailabilityForm.reset(); // Clear the form

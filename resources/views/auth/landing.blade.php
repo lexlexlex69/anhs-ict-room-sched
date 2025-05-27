@@ -46,7 +46,7 @@
             <span class="font-medium">Admin</span>
             <i class="fa-solid fa-right-to-bracket"></i>
         </a>
-        <h3 class="text-md font-semibold text-gray-700 uppercase mb-3 mt-6">Room reservation</h3>
+        <!-- <h3 class="text-md font-semibold text-gray-700 uppercase mb-3 mt-6">Room reservation</h3>
 
         <button id="openReservationModal" class="w-full flex items-center justify-between px-6 py-3 text-white bg-green-500 rounded-lg hover:bg-green-700 transition mt-4">
             <span class="font-medium">Reserve a Room</span>
@@ -55,7 +55,7 @@
         <button id="openStatusModal" class="w-full flex items-center justify-between px-6 py-3 text-white bg-purple-500 rounded-lg hover:bg-purple-700 transition mt-4">
             <span class="font-medium">Check Ticket Status</span>
             <i class="fa-solid fa-ticket"></i>
-        </button>
+        </button> -->
     </div>
     <div id="statusModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
         <div class="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
