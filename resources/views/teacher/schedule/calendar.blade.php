@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @php use Carbon\Carbon; @endphp
 @section('content')
-
 <main class="relative z-10 flex-1 px-8 font-karla font-semibold">
     <header class="flex flex-col sm:flex-row justify-between items-center bg-white text-gray-700 px-4 sm:px-6 py-4 rounded-lg shadow-md space-y-2 sm:space-y-0">
         <div class="flex items-center space-x-4">
@@ -64,10 +63,10 @@
             <div class="w-2 h-2 rounded-full bg-yellow-500 mr-1"></div>
             <span class="text-xs">Upcoming</span>
         </div>
-        <div class="flex items-center">
+        <!-- <div class="flex items-center">
             <div class="w-2 h-2 rounded-full bg-purple-500 mr-1"></div>
             <span class="text-xs">Reservation (Pending)</span>
-        </div>
+        </div> -->
     </div>
     <div class="grid grid-cols-7 bg-gray-100 mb-1 rounded-t-lg">
         @foreach(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as $day)
@@ -90,74 +89,72 @@
             @if($day['in_month'])
             @php
             $daySchedules = $weeklySchedules[$day['day_name']] ?? [];
-            // <--- CHANGE IS HERE: Use $day['date'] to fetch reservations for this specific date
-                $dayReservations=$reservations[$day['date']] ?? [];
-                $now=now();
+            $dayReservations = $reservations[$day['date']] ?? [];
+            $now = now();
 
-                // Combine and sort by start time
-                $events=collect($daySchedules)->map(function($event) use ($day) {
-                $event->type = 'weekly_schedule';
-                $event->start_time_carbon = Carbon::parse($day['date'] . ' ' . $event->start_time);
-                $event->end_time_carbon = Carbon::parse($day['date'] . ' ' . $event->end_time);
-                return $event;
-                })->merge(collect($dayReservations)->map(function($event) use ($day) {
-                $event->type = 'reservation';
-                $event->start_time_carbon = Carbon::parse($day['date'] . ' ' . $event->start_time);
-                $event->end_time_carbon = Carbon::parse($day['date'] . ' ' . $event->end_time);
-                return $event;
-                }))->sortBy('start_time_carbon');
+            // Combine and sort by start time
+            $events = collect($daySchedules)->map(function($event) use ($day) {
+            $event->type = 'weekly_schedule';
+            $event->start_time_carbon = Carbon::parse($day['date'] . ' ' . $event->start_time);
+            $event->end_time_carbon = Carbon::parse($day['date'] . ' ' . $event->end_time);
+            return $event;
+            })->merge(collect($dayReservations)->map(function($event) use ($day) {
+            $event->type = 'reservation';
+            $event->start_time_carbon = Carbon::parse($day['date'] . ' ' . $event->start_time);
+            $event->end_time_carbon = Carbon::parse($day['date'] . ' ' . $event->end_time);
+            return $event;
+            }))->sortBy('start_time_carbon');
 
+            @endphp
+
+            @if(count($events) > 0)
+            <div class="space-y-1 max-h-full overflow-y-auto text-xs">
+                @foreach($events as $event)
+                @php
+                $statusClass = '';
+                $borderColor = '';
+                $bgColor = '';
+                $textColor = '';
+                $subtitle = '';
+                $displayRoomName = '';
+
+                if ($event->type === 'weekly_schedule') {
+                $status = $now->gt($event->end_time_carbon) ? 'done' : ($now->between($event->start_time_carbon, $event->end_time_carbon) ? 'ongoing' : 'upcoming');
+                if($status === 'done') { $statusClass = 'bg-green-500'; $borderColor = 'border-green-100'; $bgColor = 'bg-green-50'; $textColor = 'text-green-700'; }
+                elseif($status === 'ongoing') { $statusClass = 'bg-blue-500'; $borderColor = 'border-blue-100'; $bgColor = 'bg-blue-50'; $textColor = 'text-blue-700'; }
+                else { $statusClass = 'bg-yellow-500'; $borderColor = 'border-yellow-100'; $bgColor = 'bg-yellow-50'; $textColor = 'text-yellow-700'; }
+                $subtitle = $event->room->subject ?? 'General';
+                $displayRoomName = $event->room->room_name;
+                } elseif ($event->type === 'reservation') {
+                // Apply time-based status for reservations
+                $status = $now->gt($event->end_time_carbon) ? 'done' : ($now->between($event->start_time_carbon, $event->end_time_carbon) ? 'ongoing' : 'upcoming');
+                if($status === 'done') { $statusClass = 'bg-green-500'; $borderColor = 'border-green-100'; $bgColor = 'bg-green-50'; $textColor = 'text-green-700'; $subtitle = 'Reservation (Done)';}
+                elseif($status === 'ongoing') { $statusClass = 'bg-blue-500'; $borderColor = 'border-blue-100'; $bgColor = 'bg-blue-50'; $textColor = 'text-blue-700'; $subtitle = 'Reservation (Ongoing)';}
+                else { $statusClass = 'bg-yellow-500'; $borderColor = 'border-yellow-100'; $bgColor = 'bg-yellow-50'; $textColor = 'text-yellow-700'; $subtitle = 'Reservation (Upcoming)';}
+                $displayRoomName = $event->room->room_name;
+                }
                 @endphp
-
-                @if(count($events) > 0)
-                <div class="space-y-1 max-h-full overflow-y-auto text-xs">
-                    @foreach($events as $event)
-                    @php
-                    $statusClass = '';
-                    $borderColor = '';
-                    $bgColor = '';
-                    $textColor = '';
-                    $subtitle = '';
-                    $displayRoomName = '';
-
-                    if ($event->type === 'weekly_schedule') {
-                    $status = $now->gt($event->end_time_carbon) ? 'done' : ($now->between($event->start_time_carbon, $event->end_time_carbon) ? 'ongoing' : 'upcoming');
-                    if($status === 'done') { $statusClass = 'bg-green-500'; $borderColor = 'border-green-100'; $bgColor = 'bg-green-50'; $textColor = 'text-green-700'; }
-                    elseif($status === 'ongoing') { $statusClass = 'bg-blue-500'; $borderColor = 'border-blue-100'; $bgColor = 'bg-blue-50'; $textColor = 'text-blue-700'; }
-                    else { $statusClass = 'bg-yellow-500'; $borderColor = 'border-yellow-100'; $bgColor = 'bg-yellow-50'; $textColor = 'text-yellow-700'; }
-                    $subtitle = $event->room->subject ?? 'General';
-                    $displayRoomName = $event->room->room_name;
-                    } elseif ($event->type === 'reservation') {
-                    // For reservations, they are always 'pending' from the teacher's view initially
-                    $statusClass = 'bg-purple-500'; // A new color for reservations
-                    $borderColor = 'border-purple-100';
-                    $bgColor = 'bg-purple-50';
-                    $textColor = 'text-purple-700';
-                    $subtitle = 'Reservation (Pending)'; // Clearly state it's a reservation and pending
-                    $displayRoomName = $event->room->room_name;
-                    }
-                    @endphp
-                    <div class="p-1 rounded {{ $bgColor }} border {{ $borderColor }} mb-1">
-                        <div class="flex items-start">
-                            <span class="w-2 h-2 rounded-full mt-1 mr-1 flex-shrink-0 {{ $statusClass }}">
-                            </span>
-                            <div class="flex-grow min-w-0">
-                                <div class="font-medium {{ $textColor }} truncate">
-                                    {{ $displayRoomName }}
-                                </div>
-                                <div class="text-gray-600 truncate">
-                                    {{ $event->start_time_carbon->format('g:i') }}-{{ $event->end_time_carbon->format('g:i A') }}
-                                </div>
-                                <div class="text-gray-500 truncate text-xs">
-                                    {{ $event->subject ?? $subtitle }}
-                                </div>
+                <div class="p-1 rounded {{ $bgColor }} border {{ $borderColor }} mb-1">
+                    <div class="flex items-start">
+                        <span class="w-2 h-2 rounded-full mt-1 mr-1 flex-shrink-0 {{ $statusClass }}">
+                        </span>
+                        <div class="flex-grow min-w-0">
+                            <div class="font-medium {{ $textColor }} truncate">
+                                {{ $displayRoomName }}
+                            </div>
+                            <div class="text-gray-600 truncate">
+                                {{ $event->start_time_carbon->format('g:i') }}-{{ $event->end_time_carbon->format('g:i A') }}
+                            </div>
+                            <div class="text-gray-500 truncate text-xs">
+                                {{ $event->subject ?? $subtitle }}
                             </div>
                         </div>
                     </div>
-                    @endforeach
                 </div>
-                @endif
-                @endif
+                @endforeach
+            </div>
+            @endif
+            @endif
         </div>
         @endforeach
     </div>
@@ -194,5 +191,4 @@
         updateTime(); // Initial call
     });
 </script>
-
 @endsection
