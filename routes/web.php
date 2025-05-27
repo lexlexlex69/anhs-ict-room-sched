@@ -51,7 +51,7 @@ Route::group(['middleware' => 'admin'], function () {
 
   //Admin view all schedule 
   Route::get('admin/calendar/schedule', [ScheduleController::class, 'adminScheduleCalendar'])->name('admin.calendar.schedule');
-  Route::get('admin/schedule/all', [ScheduleController::class, 'allSchedules'])->name('admin.schedule.all');
+  // Route::get('admin/schedule/all', [ScheduleController::class, 'allSchedules'])->name('admin.schedule.all');
   Route::get('admin/schedule/calendar', [ScheduleController::class, 'adminCalendar'])->name('admin.schedule.calendar');
   Route::get('admin/calendar/day-details', [ScheduleController::class, 'dayDetails'])->name('admin.calendar.day-details');
   //view all reservations

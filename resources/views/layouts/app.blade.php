@@ -182,12 +182,12 @@
                         <i class="fa-solid fa-chalkboard-teacher text-lg mr-3"></i> Teachers
                     </a>
                 </li>
-                <li>
+                <!-- <li>
                     <a href="{{ url('admin/schedule/all') }}" class="flex items-center p-3 rounded-lg 
                     {{ Request::is('admin/schedule/all') ? 'bg-white bg-opacity-80 text-blue-700' : 'text-gray-700  hover:bg-white hover:bg-opacity-20' }}">
                         <i class="fa-solid fa-clipboard text-lg mr-3"></i> Weekly Schedules
                     </a>
-                </li>
+                </li> -->
 
                 <li>
                     <a href="{{ url('admin/account') }}" class="flex items-center p-3 rounded-lg 
