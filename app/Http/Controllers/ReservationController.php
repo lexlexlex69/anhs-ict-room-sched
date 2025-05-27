@@ -268,17 +268,41 @@ class ReservationController extends Controller
         ]);
     }
 
-    public function adminIndex()
+    public function adminIndex(Request $request)
     {
-        $reservations = Reservation::with('room')
+        // Get current month, year, and room filter or use default values
+        $currentMonth = $request->input('month', 'All');
+        $currentYear = $request->input('year', date('Y'));
+        $currentRoom = $request->input('room_id', 'All');
+
+        $reservationsQuery = Reservation::with('room')
             ->orderBy('date', 'desc')
-            ->orderBy('start_time')
-            ->get()
+            ->orderBy('start_time');
+
+        // Apply month filter
+        if ($currentMonth !== 'All') {
+            $reservationsQuery->whereMonth('date', $currentMonth);
+        }
+
+        // Apply year filter
+        if ($currentYear !== 'All') {
+            $reservationsQuery->whereYear('date', $currentYear);
+        }
+
+        // Apply room filter
+        if ($currentRoom !== 'All') {
+            $reservationsQuery->where('room_id', $currentRoom);
+        }
+
+        $reservations = $reservationsQuery->get()
             ->groupBy(function ($item) {
                 return Carbon::parse($item->date)->format('Y-m-d');
             });
 
-        return view('admin.reservations.index', compact('reservations'));
+        // Get all rooms for the filter dropdown
+        $rooms = Room::all();
+
+        return view('admin.reservations.index', compact('reservations', 'currentMonth', 'currentYear', 'currentRoom', 'rooms'));
     }
 
     public function cancel(Request $request, $id)
