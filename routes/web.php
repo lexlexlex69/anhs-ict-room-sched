@@ -17,12 +17,7 @@ Route::get('/register', [AuthController::class, 'register'])->name('register');
 Route::post('/register', [AuthController::class, 'postRegister'])->name('post.register');
 
 // Public reservation routes
-Route::post('/reservation/check', [ReservationController::class, 'checkAvailability'])->name('reservation.check');
-Route::post('/reservation/store', [ReservationController::class, 'store'])->name('reservation.store');
-Route::post('/reservation/suggest-slots', [ReservationController::class, 'suggestOptimalSlots'])
-  ->name('reservation.suggest-slots');
-Route::post('/reservation/check-status', [ReservationController::class, 'checkTicketStatus'])
-  ->name('reservation.check-status');
+
 
 
 //notification 
@@ -99,4 +94,11 @@ Route::group(['middleware' => 'teacher'], function () {
   Route::get('teacher/schedule/calendar', [ScheduleController::class, 'teacherScheduleCalendar'])->name('teacher.schedule.calendar');
 
   Route::get('teacher/reservations/create', [ReservationController::class, 'teacherCreate'])->name('teacher.reservations.create');
+
+  Route::post('/reservation/check', [ReservationController::class, 'checkAvailability'])->name('reservation.check');
+  Route::post('/reservation/store', [ReservationController::class, 'store'])->name('reservation.store');
+  Route::post('/reservation/suggest-slots', [ReservationController::class, 'suggestOptimalSlots'])
+    ->name('reservation.suggest-slots');
+  Route::post('/reservation/check-status', [ReservationController::class, 'checkTicketStatus'])
+    ->name('reservation.check-status');
 });

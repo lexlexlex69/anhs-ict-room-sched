@@ -2,10 +2,12 @@
 // app/Http/Controllers/ReservationController.php
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Models\Reservation;
 use App\Models\WeeklySchedule;
 use App\Models\Room;
+use App\Models\User;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -60,11 +62,12 @@ class ReservationController extends Controller
         ));
     }
 
+
+
     public function teacherCancelReservation(Request $request, $id)
     {
         $user = Auth::user();
 
-        // Only allow Non-ICT teachers to access this
         if (!($user && $user->user_type == 2 && $user->teacher_type == 'Non-ICT')) {
             return back()->with('error', 'Unauthorized action.');
         }
@@ -75,12 +78,6 @@ class ReservationController extends Controller
             return back()->with('error', 'Reservation not found.');
         }
 
-        // Verify the reservation belongs to the authenticated teacher
-        // if ($reservation->teacher_name !== ($user->first_name . ' ' . $user->last_name)) {
-        //     return back()->with('error', 'You are not authorized to cancel this reservation.');
-        // }
-
-        // Check if the reservation is already cancelled or completed
         if ($reservation->status === 'cancelled') {
             return back()->with('error', 'This reservation is already cancelled.');
         }
@@ -88,18 +85,29 @@ class ReservationController extends Controller
             return back()->with('error', 'This reservation has already been completed and cannot be cancelled.');
         }
 
-        // Combine reservation date and time for comparison
         $reservationDateTime = Carbon::parse($reservation->date . ' ' . $reservation->start_time);
 
-        // Check if the current time is less than the reservation start time
         if (Carbon::now()->greaterThanOrEqualTo($reservationDateTime)) {
             return back()->with('error', 'Cannot cancel a reservation that has already started or passed.');
         }
 
-        // Proceed with cancellation
         $reservation->status = 'cancelled';
         $reservation->remarks = 'Cancelled by teacher: ' . ($user->first_name . ' ' . $user->last_name);
         $reservation->save();
+
+        // Notification for admin about cancelled reservation
+        $admin = User::where('user_type', '1')->first();
+        if ($admin) {
+            $room = Room::find($reservation->room_id); // Assuming room_id is available in reservation
+            $roomName = $room ? $room->room_name : 'Unknown Room';
+            $formattedDate = Carbon::parse($reservation->date)->format('F d, Y');
+            $formattedStartTime = Carbon::parse($reservation->start_time)->format('h:i A');
+
+            Notification::create([
+                'user_id' => $admin->id,
+                'message' => "Reservation '{$reservation->reference_number}' for '{$roomName}' on {$formattedDate} at {$formattedStartTime} has been cancelled by {$user->first_name} {$user->last_name}."
+            ]);
+        }
 
         return back()->with('success', 'Reservation ' . $reservation->reference_number . ' has been cancelled successfully.');
     }
@@ -152,20 +160,18 @@ class ReservationController extends Controller
             'start_time' => 'required',
             'end_time' => 'required',
             'teacher_name' => 'required|string|max:255',
-            'subject' => 'nullable|string|max:255' // Subject can be nullable
+            'subject' => 'nullable|string|max:255'
         ]);
 
         $user = Auth::user();
 
-        // Only allow Non-ICT teachers to make reservations
         if (!($user && $user->user_type == 2 && $user->teacher_type == 'Non-ICT')) {
             return response()->json([
                 'success' => false,
                 'message' => 'Only Non-ICT teachers can reserve rooms.'
-            ], 403); // Forbidden
+            ], 403);
         }
 
-        // Determine status: Non-ICT teacher reservations are always 'approved'
         $status = 'approved';
 
         $reservation = Reservation::create([
@@ -176,13 +182,29 @@ class ReservationController extends Controller
             'end_time' => $request->end_time,
             'teacher_name' => $request->teacher_name,
             'subject' => $request->subject,
-            'status' => $status // Use the determined status
+            'status' => $status
         ]);
+
+        $admin = User::where('user_type', '1')->first();
+
+        // Notification for admin about new reservation
+        if ($admin) {
+            $room = Room::find($request->room_id);
+            $roomName = $room ? $room->room_name : 'Unknown Room';
+            $formattedDate = Carbon::parse($request->date)->format('F d, Y');
+            $formattedStartTime = Carbon::parse($request->start_time)->format('h:i A');
+            $formattedEndTime = Carbon::parse($request->end_time)->format('h:i A');
+
+            Notification::create([
+                'user_id' => $admin->id,
+                'message' => "A new reservation for '{$roomName}' on {$formattedDate} from {$formattedStartTime} to {$formattedEndTime} has been created by {$request->teacher_name} for the subject '{$request->subject}' (Reference: {$reservation->reference_number})."
+            ]);
+        }
 
         return response()->json([
             'success' => true,
             'reference_number' => $reservation->reference_number,
-            'status' => $reservation->status // Return the actual status
+            'status' => $reservation->status
         ]);
     }
     // Add this method to your ReservationController
